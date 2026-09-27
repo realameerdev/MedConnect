@@ -1,0 +1,220 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - country: string (required)
+    //   - age: number (required)
+    //   - role: string (required, enum: ['patient', 'doctor', 'admin'])
+    //   - createdAt: string (required, immutable)
+    //
+    // Collection: doctors
+    // Document ID: {doctorId}
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - name: string (required)
+    //   - specialty: string (required)
+    //   - availability: string (required, enum: ['available', 'busy', 'offline'])
+    //   - rating: number (optional)
+    //   - imageUrl: string (optional)
+    //
+    // Collection: appointments
+    // Document ID: {appointmentId}
+    // Fields:
+    //   - patientId: string (required, immutable)
+    //   - doctorId: string (required, immutable)
+    //   - date: string (required)
+    //   - time: string (required)
+    //   - status: string (required, enum: ['scheduled', 'completed', 'cancelled'])
+    //   - createdAt: string (required, immutable)
+    //
+    // Collection: messages
+    // Document ID: {messageId}
+    // Fields:
+    //   - consultationId: string (required, immutable)
+    //   - senderId: string (required, immutable)
+    //   - text: string (required)
+    //   - timestamp: number (required, immutable)
+    //
+    // Collection: daily_stats (subcollection of users)
+    // Document ID: {dateStr}
+    // Fields:
+    //   - steps: number (required)
+    //   - stepsGoal: number (required)
+    //   - water: number (required)
+    //   - waterGoal: number (required)
+    //   - exercise: number (required)
+    //   - exerciseGoal: number (required)
+    //   - bp_sys: number (required)
+    //   - bp_dia: number (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email.lower() == "abdulrofihabdullahhamzah@gmail.com".lower() ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isPatient(data) {
+      return isAuthenticated() && request.auth.uid == data.patientId;
+    }
+
+    function isDoctor(data) {
+      return isAuthenticated() && request.auth.uid == data.doctorId;
+    }
+    
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+    
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+    
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 150 &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 200 &&
+             (!('country' in data) || data.country is string) &&
+             (!('age' in data) || (data.age is number && (data.age >= 18 || data.email.lower() == "abdulrofihabdullahhamzah@gmail.com".lower()))) &&
+             data.role in ['patient', 'doctor', 'admin'] &&
+             data.createdAt is string;
+    }
+
+    function isValidDoctor(data) {
+      return hasOnlyAllowedFields(['uid', 'name', 'specialty', 'availability', 'rating', 'imageUrl']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() < 100 &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.specialty is string && data.specialty.size() > 0 && data.specialty.size() < 100 &&
+             data.availability in ['available', 'busy', 'offline'] &&
+             (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 500));
+    }
+
+    function isValidAppointment(data) {
+      return hasOnlyAllowedFields(['patientId', 'patientName', 'doctorId', 'doctorName', 'specialty', 'date', 'time', 'reason', 'status', 'createdAt']) &&
+             data.patientId is string && data.patientId.size() > 0 && data.patientId.size() < 100 &&
+             data.doctorId is string && data.doctorId.size() > 0 && data.doctorId.size() < 100 &&
+             (!('patientName' in data) || data.patientName is string) &&
+             (!('doctorName' in data) || data.doctorName is string) &&
+             (!('specialty' in data) || data.specialty is string) &&
+             (!('reason' in data) || data.reason is string) &&
+             data.date is string && data.date.size() == 10 &&
+             data.time is string && data.time.size() <= 10 &&
+             data.status in ['scheduled', 'completed', 'cancelled'] &&
+             data.createdAt is string;
+    }
+
+    function isValidBloodDonor(data) {
+      return hasOnlyAllowedFields(['uid', 'name', 'bloodGroup', 'location', 'lastRegistered']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.name is string &&
+             data.bloodGroup is string &&
+             data.location is string &&
+             data.lastRegistered is string;
+    }
+
+    function isValidMessage(data) {
+      return hasOnlyAllowedFields(['consultationId', 'senderId', 'text', 'timestamp']) &&
+             data.consultationId is string && data.consultationId.size() > 0 && data.consultationId.size() < 100 &&
+             data.senderId is string && data.senderId.size() > 0 && data.senderId.size() < 100 &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
+             data.timestamp is number;
+    }
+
+    function isValidDailyStats(data) {
+      return hasOnlyAllowedFields(['steps', 'stepsGoal', 'water', 'waterGoal', 'exercise', 'exerciseGoal', 'bp_sys', 'bp_dia']) &&
+             data.steps is number && data.steps >= 0 &&
+             data.stepsGoal is number && data.stepsGoal > 0 &&
+             data.water is number && data.water >= 0 &&
+             data.waterGoal is number && data.waterGoal > 0 &&
+             data.exercise is number && data.exercise >= 0 &&
+             data.exerciseGoal is number && data.exerciseGoal > 0 &&
+             data.bp_sys is number && data.bp_sys > 0 &&
+             data.bp_dia is number && data.bp_dia > 0;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged() && (request.resource.data.role in ['patient', 'doctor'] || isAdmin());
+      allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() && (request.resource.data.role == resource.data.role || isAdmin()) && request.resource.data.createdAt == resource.data.createdAt;
+
+      match /daily_stats/{dateStr} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create, update: if (isOwner(userId) || isAdmin()) && isValidDailyStats(request.resource.data);
+      }
+    }
+
+    match /blood_donors/{donorId} {
+      // Allow searching for donors purely by bloodGroup query - queries must filter by bloodGroup
+      // Note: we check resource.data.bloodGroup to ensure secure list queries
+      allow list: if isAuthenticated() && resource.data.bloodGroup != null;
+      allow get: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(donorId) && isValidBloodDonor(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(donorId) && isValidBloodDonor(request.resource.data);
+      allow delete: if isOwner(donorId) || isAdmin();
+    }
+
+    match /doctors/{doctorId} {
+      allow read: if true;
+      allow create: if (isAdmin() || isOwner(doctorId)) && isValidDoctor(request.resource.data);
+      allow update: if (isAdmin() || isOwner(doctorId)) && isValidDoctor(request.resource.data) && uidNotModified();
+    }
+
+    match /appointments/{appointmentId} {
+      allow get: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin());
+      allow list: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId);
+      allow create: if isAuthenticated() && isValidAppointment(request.resource.data) && (request.resource.data.patientId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && isValidAppointment(request.resource.data) && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin()) && request.resource.data.patientId == resource.data.patientId && request.resource.data.doctorId == resource.data.doctorId && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /messages/{messageId} {
+      allow get: if isAuthenticated() && (request.auth.uid == resource.data.senderId || isAdmin());
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidMessage(request.resource.data) && request.resource.data.senderId == request.auth.uid;
+      allow update: if false; // Messages are immutable
+    }
+  }
+}

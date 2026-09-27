@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the MedConnect platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "country": { "type": "string", "description": "User's country" },
+        "age": { "type": "number", "minimum": 18, "description": "User's age (must be 18+)" },
+        "role": { "type": "string", "enum": ["patient", "doctor", "admin"], "description": "User role" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "Doctor": {
+      "title": "Doctor",
+      "description": "A doctor available for consultation.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID of the doctor" },
+        "name": { "type": "string", "description": "Doctor's full name" },
+        "specialty": { "type": "string", "description": "Medical specialty" },
+        "availability": { "type": "string", "enum": ["available", "busy", "offline"], "description": "Current availability status" },
+        "rating": { "type": "number", "description": "Average rating" },
+        "imageUrl": { "type": "string", "description": "Profile image URL" }
+      },
+      "required": ["uid", "name", "specialty", "availability"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "A booked consultation appointment.",
+      "type": "object",
+      "properties": {
+        "patientId": { "type": "string", "description": "UID of the patient" },
+        "patientName": { "type": "string" },
+        "doctorId": { "type": "string", "description": "UID of the doctor" },
+        "doctorName": { "type": "string" },
+        "specialty": { "type": "string" },
+        "date": { "type": "string", "description": "Appointment date (YYYY-MM-DD)" },
+        "time": { "type": "string", "description": "Appointment time (HH:MM)" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["scheduled", "completed", "cancelled"], "description": "Appointment status" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["patientId", "doctorId", "date", "time", "status", "createdAt"]
+    },
+    "BloodDonor": {
+      "title": "Blood Donor",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "bloodGroup": { "type": "string" },
+        "location": { "type": "string" },
+        "lastRegistered": { "type": "string" }
+      },
+      "required": ["uid", "name", "bloodGroup", "location", "lastRegistered"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A chat message in a consultation.",
+      "type": "object",
+      "properties": {
+        "consultationId": { "type": "string", "description": "ID of the consultation session" },
+        "senderId": { "type": "string", "description": "UID of the sender" },
+        "text": { "type": "string", "description": "Message content" },
+        "timestamp": { "type": "number", "description": "Unix timestamp" }
+      },
+      "required": ["consultationId", "senderId", "text", "timestamp"]
+    },
+    "DailyStats": {
+      "title": "DailyStats",
+      "description": "Daily health stats for a user.",
+      "type": "object",
+      "properties": {
+        "steps": { "type": "number" },
+        "stepsGoal": { "type": "number" },
+        "water": { "type": "number" },
+        "waterGoal": { "type": "number" },
+        "exercise": { "type": "number" },
+        "exerciseGoal": { "type": "number" },
+        "bp_sys": { "type": "number" },
+        "bp_dia": { "type": "number" }
+      },
+      "required": ["steps", "stepsGoal", "water", "waterGoal", "exercise", "exerciseGoal", "bp_sys", "bp_dia"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "users/{userId}/daily_stats/{dateStr}": {
+      "schema": { "$ref": "#/entities/DailyStats" },
+      "description": "User daily health statistics"
+    },
+    "blood_donors/{donorId}": {
+      "schema": { "$ref": "#/entities/BloodDonor" },
+      "description": "Blood donor registrations"
+    },
+    "doctors/{doctorId}": {
+      "schema": { "$ref": "#/entities/Doctor" },
+      "description": "Doctor profiles"
+    },
+    "appointments/{appointmentId}": {
+      "schema": { "$ref": "#/entities/Appointment" },
+      "description": "Appointments"
+    },
+    "messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Consultation messages"
+    }
+  }
+}
