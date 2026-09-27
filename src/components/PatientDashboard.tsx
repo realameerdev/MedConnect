@@ -27,6 +27,7 @@ import {
   Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { MedicationReminder } from './MedicationReminder';
 
 interface DailyStats {
   steps: number;
@@ -480,6 +481,7 @@ export function PatientDashboard({
             {t('v_log_glass')}
           </button>
         </motion.div>
+        <MedicationReminder />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
