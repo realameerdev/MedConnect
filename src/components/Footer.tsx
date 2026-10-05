@@ -1,128 +1,112 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { Mail, Shield, Globe, Award, HelpCircle, FileText, Lock, Activity } from 'lucide-react';
+import { Shield, Lock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import FooterInfoPanel, { FooterContentType } from './FooterInfoPanel';
+import { MedConnectLogo } from './MedConnectLogo';
 
 export default function Footer() {
   const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const [activePanel, setActivePanel] = useState<FooterContentType | null>(null);
 
-  const navLinks: { label: string; type: FooterContentType }[] = [
+  const quickLinks: { label: string; type: FooterContentType }[] = [
     { label: t('footer_how_it_works'), type: 'how-it-works' },
     { label: t('footer_medical_network'), type: 'medical-network' },
     { label: t('footer_patient_portal'), type: 'patient-portal' },
-    { label: t('footer_safety'), type: 'safety-protocols' }
-  ];
-
-  const legalLinks: { label: string; type: FooterContentType; icon: any }[] = [
-    { label: t('footer_terms'), type: 'terms', icon: FileText },
-    { label: t('footer_privacy'), type: 'privacy', icon: Lock },
-    { label: t('footer_ethics'), type: 'ethics', icon: Shield },
-    { label: t('footer_compliance'), type: 'compliance', icon: Award }
+    { label: t('footer_safety'), type: 'safety-protocols' },
+    { label: t('footer_terms'), type: 'terms' },
+    { label: t('footer_privacy'), type: 'privacy' },
+    { label: t('footer_compliance'), type: 'compliance' },
   ];
 
   return (
     <>
-      <footer className="bg-slate-900 pt-20 md:pt-24 pb-28 md:pb-12 border-t border-white/5 relative overflow-hidden">
-      {/* Decorative pulse in footer bg */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent" />
+      <footer className="bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 relative overflow-hidden font-manrope border-t border-slate-100 dark:border-slate-800/80 transition-colors w-full">
+        
+        {/* Clean Static Border Highlight */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-sky-500/20 dark:via-sky-400/20 to-transparent pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
-          <div className="space-y-8">
-            <div className="flex items-center space-x-2 text-white">
-              <div className="w-8 h-8 bg-primary-600 rounded-xl flex items-center justify-center">
-                <Activity className="w-5 h-5" />
-              </div>
-              <span className="text-xl font-display font-black tracking-tighter italic">MedConnect</span>
-            </div>
+        {/* Essential Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-12 pb-8 sm:pb-10 relative z-10">
+          
+          {/* Main Essential Info Row */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8 pb-8 sm:pb-10 border-b border-slate-100 dark:border-slate-800/80 text-left">
             
-            <p className="text-slate-400 text-sm leading-relaxed max-w-xs font-medium">
-              {t('footer_desc')}
-            </p>
+            {/* Brand Section: Logo + Name + 1-Line Description */}
+            <div className="space-y-2 max-w-md">
+              <div className="flex items-center space-x-2.5">
+                <div className="text-slate-900 dark:text-white">
+                  <MedConnectLogo size={28} variant="icon" />
+                </div>
+                <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center leading-none">
+                  <span>Med</span>
+                  <span className="text-sky-500 font-extrabold ml-0.5">Connect</span>
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-slate-500 ml-1">
+                  · Healthcare
+                </span>
+              </div>
 
-            <div className="flex items-center space-x-4">
-               <a href="mailto:contact@medconnect.clinic" className="flex items-center space-x-3 group bg-white/5 hover:bg-white/10 transition-colors p-3 rounded-2xl border border-white/5">
-                 <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center group-hover:bg-primary-500 transition-colors">
-                   <Mail className="w-5 h-5 text-primary-400 group-hover:text-white" />
-                 </div>
-                 <div>
-                   <p className="text-[10px] font-black text-slate-500 tracking-widest leading-none mb-1 uppercase">Brand email</p>
-                   <p className="text-xs font-bold text-white tracking-tight">contact@medconnect.clinic</p>
-                 </div>
-               </a>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                AI-powered symptom assessment, vital synchrony, and verified specialist care.
+              </p>
             </div>
+
+            {/* Essential Links */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 text-xs sm:text-sm font-semibold">
+              {quickLinks.map((link) => (
+                <button
+                  key={link.type}
+                  onClick={() => setActivePanel(link.type)}
+                  className="text-slate-600 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer py-1 text-left"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+
           </div>
 
-          <div>
-             <h4 className="text-[10px] font-black text-slate-500 tracking-[0.3em] mb-8 uppercase">{t('footer_nav')}</h4>
-             <ul className="space-y-4">
-               {navLinks.map((link) => (
-                 <li key={link.type}>
-                   <button 
-                     onClick={() => setActivePanel(link.type)}
-                     className="flex items-center text-white/70 hover:text-white transition-colors cursor-pointer w-full text-left"
-                   >
-                     <span className="text-[11px] font-black tracking-widest uppercase">{link.label}</span>
-                   </button>
-                 </li>
-               ))}
-             </ul>
-          </div>
-
-          <div>
-             <h4 className="text-[10px] font-black text-slate-500 tracking-[0.3em] mb-8 uppercase">{t('footer_legal')}</h4>
-             <ul className="space-y-4">
-               {legalLinks.map((link) => (
-                 <li key={link.type}>
-                   <button 
-                     onClick={() => setActivePanel(link.type)}
-                     className="flex items-center text-white/70 hover:text-white transition-colors cursor-pointer w-full text-left"
-                   >
-                     <span className="text-[11px] font-black tracking-widest uppercase">{link.label}</span>
-                   </button>
-                 </li>
-               ))}
-             </ul>
-          </div>
-
-          <div className="bg-white/5 rounded-3xl p-8 border border-white/5 relative overflow-hidden group">
-             <div className="absolute inset-0 bg-primary-600 opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
-             <HelpCircle className="w-10 h-10 text-primary-500 mb-6" />
-             <h4 className="text-[10px] font-black text-white tracking-[0.3em] mb-3 uppercase">{t('footer_support')}</h4>
-             <p className="text-[10px] font-bold text-slate-400 leading-relaxed mb-6 uppercase tracking-tight">{t('footer_support_desc')}</p>
-             <button className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-[10px] font-black tracking-widest transition-all shadow-lg shadow-primary-600/20 uppercase">
-               {t('footer_ticket')}
-             </button>
-          </div>
-        </div>
-
-        <div className="pt-8 md:pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8 text-center md:text-left">
-          <div className="flex flex-col items-center md:items-start space-y-2 md:space-y-0">
-            <p className="text-[10px] font-black text-slate-500 tracking-[0.3em] uppercase">
-              © Medconnect {currentYear} {t('footer_rights')}
+          {/* Minimal Bottom Bar: Copyright & Verified Trust Badges */}
+          <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left text-xs text-slate-500 dark:text-slate-400">
+            
+            {/* Copyright */}
+            <p>
+              © {currentYear} MedConnect. All rights reserved.
             </p>
+
+            {/* Quiet Essential Trust Badges */}
+            <div className="flex items-center gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>HIPAA Verified</span>
+              </span>
+
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+
+              <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                <Shield className="w-3.5 h-3.5 text-sky-500" />
+                <span>ISO 27001</span>
+              </span>
+
+              <span className="text-slate-300 dark:text-slate-700">·</span>
+
+              <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                <Lock className="w-3 h-3 text-slate-400" />
+                <span>256-Bit SSL</span>
+              </span>
+            </div>
+
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-8">
-            <span className="inline-flex items-center text-[10px] font-black text-green-500 tracking-widest uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
-              {t('footer_healthy')}
-            </span>
-            <span className="text-[10px] font-black text-slate-500 tracking-[0.3em]">
-              v2.1.0-Institutional
-            </span>
-          </div>
         </div>
-      </div>
-    </footer>
+      </footer>
 
-    <FooterInfoPanel 
-      type={activePanel} 
-      onClose={() => setActivePanel(null)} 
-    />
+      {/* Interactive Detail Modal Panel */}
+      <FooterInfoPanel 
+        type={activePanel} 
+        onClose={() => setActivePanel(null)} 
+      />
     </>
   );
 }

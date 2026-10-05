@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { handleFirestoreError, OperationType } from '../lib/firestoreErrorHandler';
+import { MedConnectLogo } from './MedConnectLogo';
 import { 
   Activity, 
   Droplets, 
@@ -11,33 +12,39 @@ import {
   Heart, 
   Calendar as CalendarIcon, 
   Plus, 
+  Minus,
   ShieldCheck, 
-  ArrowLeft,
-  ChevronRight,
-  TrendingUp,
-  Clock,
-  Trophy,
-  Zap,
-  Settings,
-  Bell,
-  X,
-  Sparkles,
-  AlertCircle,
-  Home,
-  Globe
+  ArrowLeft, 
+  ArrowRight,
+  TrendingUp, 
+  Clock, 
+  Zap, 
+  Settings, 
+  Bell, 
+  Brain, 
+  AlertCircle, 
+  Home, 
+  Globe,
+  Stethoscope,
+  Lock,
+  CheckCircle2,
+  SlidersHorizontal,
+  UserCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MedicationReminder } from './MedicationReminder';
+import { MedicalIntelligencePulse } from './MedicalIntelligencePulse';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface DailyStats {
   steps: number;
   stepsGoal: number;
   water: number;
-  waterGoal: number; // glasses or ml
-  exercise: number; // minutes
+  waterGoal: number;
+  exercise: number;
   exerciseGoal: number;
-  bp_sys: number; // Systolic
-  bp_dia: number; // Diastolic
+  bp_sys: number;
+  bp_dia: number;
   notifiedGoals?: string[];
 }
 
@@ -53,18 +60,16 @@ const DEFAULT_STATS: DailyStats = {
   notifiedGoals: []
 };
 
-import { useLanguage } from '../contexts/LanguageContext';
-
 export function PatientDashboard({ 
   onBack, 
   onNotificationAdd,
-  onActionClick
+  onActionClick 
 }: { 
   onBack: () => void; 
   onNotificationAdd?: (title: string, message: string, type?: 'success' | 'info' | 'alert') => void;
   onActionClick?: (action: string) => void;
 }) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const { t } = useLanguage();
   const [stats, setStats] = useState<DailyStats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
@@ -119,8 +124,8 @@ export function PatientDashboard({
 
   const triggerGoalNotification = async (type: string, value: number) => {
     if (!user) return;
-    const title = "Goal Achieved! 🎉";
-    const message = `Incredible work! You've successfully reached your ${type} goal of ${value} units today.`;
+    const title = "Goal Achieved!";
+    const message = `You've successfully reached your ${type} goal of ${value} units today.`;
     if (onNotificationAdd) onNotificationAdd(title, message, 'success');
     const statsRef = doc(db, 'users', user.uid, 'daily_stats', dateStr);
     const notified = stats.notifiedGoals || [];
@@ -139,7 +144,7 @@ export function PatientDashboard({
         })
       });
     } catch (e) {
-      console.error("Email notification failed", e);
+      console.error("Email notification error", e);
     }
   };
 
@@ -185,374 +190,633 @@ export function PatientDashboard({
 
   const incrementStat = (key: keyof DailyStats, amount: number) => {
     const currentValue = stats[key] as number;
-    updateStat(key, currentValue + amount);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+    updateStat(key, Math.max(0, currentValue + amount));
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-96 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-        <p className="text-slate-400 font-bold tracking-widest text-xs uppercase px-4 text-center">{t('loading')}</p>
+      <div className="flex flex-col justify-center items-center h-96 space-y-4 font-manrope">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-sky-500 border-t-transparent"></div>
+        <p className="text-slate-400 font-bold tracking-wider text-xs uppercase">{t('loading') || 'Loading Clinical Portal...'}</p>
       </div>
     );
   }
 
+  const currentSteps = localSteps ?? stats.steps;
+  const stepsPercent = Math.min((currentSteps / stats.stepsGoal) * 100, 100);
+  const waterPercent = Math.min((stats.water / stats.waterGoal) * 100, 100);
+  const exercisePercent = Math.min((stats.exercise / stats.exerciseGoal) * 100, 100);
+
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 space-y-8"
-    >
-      {/* Quick Launch Action Bar */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 mb-8">
-        <div className="bg-primary-600 rounded-[2rem] md:rounded-[3rem] p-6 sm:p-8 md:p-10 text-white relative overflow-hidden shadow-2xl shadow-primary-600/20">
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 md:gap-10">
-            <div className="w-full lg:w-auto text-left">
-              <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black tracking-widest mb-4 border border-white/20">
-                <ShieldCheck className="w-4 h-4" />
-                <span>{t('dash_authorized_suite')}</span>
+    <div className="min-h-screen bg-gradient-to-b from-sky-50/40 via-white to-sky-50/30 font-manrope text-slate-900 pb-20 transition-colors">
+      
+      {/* Background Soft Sky Blue Ambient Light matching landing page */}
+      <div 
+        className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] pointer-events-none opacity-50"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 30%, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.08) 45%, transparent 70%)'
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 space-y-8 z-10">
+        
+        {/* Top Header Navigation Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          
+          {/* Left Breadcrumb & Patient Info */}
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 hover:border-sky-300 text-slate-700 hover:text-sky-600 font-bold text-xs transition-all shadow-xs cursor-pointer active:scale-95"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Landing Page</span>
+            </button>
+            <span className="text-slate-300">/</span>
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Clinical Portal Active</span>
+            </div>
+          </div>
+
+          {/* Right Status Badge & Telemetry Time */}
+          <div className="flex items-center gap-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 backdrop-blur-md border border-sky-100 shadow-xs text-slate-600 text-xs font-medium">
+              <Clock className="w-3.5 h-3.5 text-sky-500" />
+              <span>Synced {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-700 text-xs font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />
+              <span className="capitalize">{userRole || 'Patient'} Account</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* 
+          =======================================================
+          HERO WELCOME BANNER 
+          Matching Landing Page's 4-card / Hero stage aesthetic
+          =======================================================
+        */}
+        <div className="relative rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-10 md:p-12 bg-white/85 backdrop-blur-2xl border border-sky-100/90 shadow-[0_20px_60px_rgba(14,165,233,0.08)] overflow-hidden">
+          
+          {/* Subtle top-right ambient gradient */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-sky-400/15 via-sky-300/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
+            
+            {/* Left Headline & Patient Greeting */}
+            <div className="max-w-2xl text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-sky-100 bg-sky-50/70 text-sky-600 text-xs font-semibold mb-3 sm:mb-4">
+                <Activity className="w-3.5 h-3.5 text-sky-500" />
+                <span>Authorized Clinical Suite</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black font-display tracking-tighter italic leading-none mb-4 break-words">
-                {t('dash_instant_diag')}
-              </h2>
-              <p className="text-primary-100 font-medium opacity-90 text-[13px] sm:text-sm max-w-md">
-                {t('dash_diag_desc')}
+
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                Welcome back, <br className="hidden sm:inline" />
+                <span className="text-sky-500">{user?.displayName || 'Patient'}</span>
+              </h1>
+
+              <p className="text-slate-500 text-xs sm:text-base font-normal mt-2.5 sm:mt-3.5 max-w-lg leading-relaxed">
+                Your health passport, vital synchrony, and verified practitioner network in one synchronized clinical environment.
               </p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full lg:w-auto sm:grid-cols-3 lg:grid-cols-5 lg:shrink-0">
-              {[
-                { id: 'regional-hub', icon: Globe, label: t('nav_regional_hub'), color: 'bg-emerald-500/80 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-500/30 border border-emerald-400' },
-                { id: 'chat', icon: Sparkles, label: t('nav_consult_ai'), color: 'bg-white/10 hover:bg-white/20 border border-white/10' },
-                { id: 'doctors', icon: CalendarIcon, label: t('dash_specialists'), color: 'bg-white/10 hover:bg-white/20 border border-white/10' },
-                { id: 'emergency', icon: AlertCircle, label: t('emergency'), color: 'bg-red-500/80 hover:bg-red-500 text-white shadow-xl shadow-red-500/30 border border-red-400' },
-                { id: 'appointments', icon: Clock, label: t('dash_schedule'), color: 'bg-white/5 hover:bg-white/10 border border-white/10' }
-              ].map((action) => (
-                <button 
+
+            {/* Right Health Score Card & Live Telemetry Tile */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2.5 sm:gap-4 w-full sm:w-auto shrink-0">
+              
+              {/* Wellness Score Card */}
+              <div className="p-4 sm:p-6 bg-gradient-to-br from-sky-500 to-sky-600 rounded-[1.75rem] sm:rounded-[2rem] text-white shadow-[0_12px_30px_rgba(14,165,233,0.25)] text-center w-full sm:w-auto sm:min-w-[150px]">
+                <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-sky-100 mb-1">
+                  Wellness Score
+                </p>
+                <div className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+                  88<span className="text-xs sm:text-sm font-semibold text-sky-200">/100</span>
+                </div>
+                <div className="inline-flex items-center gap-1 mt-1.5 sm:mt-2 px-2 py-0.5 rounded-full bg-white/20 text-[9px] sm:text-[10px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+                  <span>Optimal</span>
+                </div>
+              </div>
+
+              {/* Triage & Status Tile */}
+              <div className="p-4 sm:p-6 bg-white rounded-[1.75rem] sm:rounded-[2rem] border border-slate-200/80 shadow-xs text-center w-full sm:w-auto sm:min-w-[150px]">
+                <p className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Network Sync
+                </p>
+                <div className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                  99.4%
+                </div>
+                <div className="inline-flex items-center gap-1 mt-1.5 sm:mt-2 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[9px] sm:text-[10px] font-bold border border-emerald-100">
+                  <span>Protected</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        {/* 
+          =======================================================
+          QUICK CLINICAL ACTION TILES (MATCHING LANDING CAPABILITIES)
+          =======================================================
+        */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <h2 className="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              Clinical Tools & Consultations
+            </h2>
+            <span className="text-xs font-semibold text-slate-400">Direct Access</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
+            {[
+              {
+                id: 'chat',
+                title: 'AI Doctor',
+                subtitle: 'Symptom Triage',
+                icon: Brain,
+                bg: 'bg-white hover:bg-sky-50/50',
+                border: 'border-slate-100 hover:border-sky-200',
+                iconColor: 'text-sky-500 bg-sky-50',
+                tag: 'Instant'
+              },
+              {
+                id: 'doctors',
+                title: 'Specialists',
+                subtitle: 'Video & Clinic',
+                icon: Stethoscope,
+                bg: 'bg-white hover:bg-sky-50/50',
+                border: 'border-slate-100 hover:border-sky-200',
+                iconColor: 'text-blue-500 bg-blue-50',
+                tag: '40+ Specs'
+              },
+              {
+                id: 'appointments',
+                title: 'Schedule',
+                subtitle: 'My Bookings',
+                icon: CalendarIcon,
+                bg: 'bg-white hover:bg-sky-50/50',
+                border: 'border-slate-100 hover:border-sky-200',
+                iconColor: 'text-indigo-500 bg-indigo-50',
+                tag: 'Live Sync'
+              },
+              {
+                id: 'regional-hub',
+                title: 'Health Hub',
+                subtitle: 'Donors & Meds',
+                icon: Globe,
+                bg: 'bg-white hover:bg-emerald-50/50',
+                border: 'border-slate-100 hover:border-emerald-200',
+                iconColor: 'text-emerald-500 bg-emerald-50',
+                tag: 'Verified'
+              },
+              {
+                id: 'emergency',
+                title: 'Emergency',
+                subtitle: 'Urgent Dispatch',
+                icon: AlertCircle,
+                bg: 'bg-rose-500 hover:bg-rose-600 text-white',
+                border: 'border-rose-400',
+                iconColor: 'text-white bg-white/20',
+                tag: '24/7 Care'
+              },
+            ].map((action, idx) => {
+              const Icon = action.icon;
+              const isEmergency = action.id === 'emergency';
+              return (
+                <button
                   key={action.id}
                   onClick={() => onActionClick?.(action.id)}
-                  className={`flex flex-col items-center justify-center aspect-square w-full rounded-2xl md:rounded-3xl transition-all active:scale-95 group p-2 ${action.color}`}
+                  className={`p-3.5 sm:p-5 rounded-2xl sm:rounded-[2rem] border transition-all text-left shadow-[0_10px_25px_rgba(14,165,233,0.04)] hover:shadow-md cursor-pointer active:scale-[0.98] flex flex-col justify-between group ${action.bg} ${action.border} ${
+                    isEmergency ? 'col-span-2 sm:col-span-1' : ''
+                  }`}
                 >
-                  <action.icon className="w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3 transition-transform group-hover:scale-110" />
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-center uppercase break-words px-1">{action.label}</span>
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-xs ${action.iconColor}`}>
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isEmergency ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {action.tag}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className={`font-extrabold text-xs sm:text-base tracking-tight leading-snug ${
+                      isEmergency ? 'text-white' : 'text-slate-900'
+                    }`}>
+                      {action.title}
+                    </h3>
+                    <p className={`text-[11px] sm:text-xs font-normal mt-0.5 ${
+                      isEmergency ? 'text-white/80' : 'text-slate-500'
+                    }`}>
+                      {action.subtitle}
+                    </p>
+                  </div>
                 </button>
-              ))}
-            </div>
-          </div>
-          {/* Decorative background elements */}
-          <div className="absolute top-0 right-0 p-20 opacity-10 -mr-20 -mt-20 pointer-events-none">
-            <ShieldCheck className="w-80 h-80" />
+              );
+            })}
           </div>
         </div>
-      </motion.div>
 
-      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        {/* 
+          =======================================================
+          DAILY VITAL BIOMARKERS & HEALTH TRACKING GRID
+          =======================================================
+        */}
         <div>
-          <button 
-            onClick={onBack}
-            className="flex items-center text-slate-500 hover:text-slate-900 transition-colors mb-6 font-bold tracking-widest text-[10px] uppercase"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t('dash_medical_portal')}
-          </button>
-          <div className="inline-flex items-center space-x-2 bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] mb-4 border border-slate-200 uppercase">
-            <Clock className="w-3.5 h-3.5 mr-1" />
-            <span>{t('dash_last_sync')}: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              Biomarkers & Daily Progress
+            </h2>
+            <span className="text-xs font-semibold text-slate-400">Live Telemetry</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black font-display text-slate-900 tracking-tighter leading-[0.8] mb-4 italic">
-            {t('dash_health_overview')} <br />
-            <span className="text-primary-600 not-italic">{t('hero_stat_secure')}.</span>
-          </h2>
-          <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed max-w-xl">
-            {t('dash_insights_desc')}
-          </p>
-        </div>
-        
-        <div className="flex flex-row items-center w-full md:w-auto space-x-2 bg-white p-2 md:p-3 border border-slate-100 rounded-3xl shadow-sm overflow-hidden">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-primary-600 rounded-2xl text-center text-white shadow-lg shadow-primary-600/20"
-          >
-            <p className="text-[10px] font-black tracking-widest mb-1 opacity-70 uppercase whitespace-nowrap">{t('dash_wellness_score')}</p>
-            <p className="text-xl md:text-2xl font-black font-mono tracking-tighter">88<span className="text-[10px] md:text-xs opacity-60">/100</span></p>
-          </motion.div>
-          <div className="flex-1 md:flex-none px-4 md:px-6 py-3 bg-slate-50 rounded-2xl text-center">
-            <p className="text-[10px] font-black text-slate-400 tracking-widest mb-1 uppercase">Status</p>
-            <p className="text-sm font-black text-green-500 uppercase tracking-tighter">Optimized</p>
-          </div>
-        </div>
-      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 sm:mb-20">
-        {/* Blood Pressure Card */}
-        <motion.div 
-          variants={itemVariants}
-          className="lg:col-span-2 bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 p-6 sm:p-8 shadow-xl shadow-slate-900/5 flex flex-col justify-between overflow-hidden relative group"
-        >
-          <div className="absolute top-0 right-0 p-12 opacity-5 -mr-10 -mt-10 group-hover:scale-110 transition-transform pointer-events-none">
-            <Heart className="w-40 h-40 md:w-48 md:h-48 text-primary-600" />
-          </div>
-          <div className="relative z-10 w-full">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 shrink-0">
-                  <Heart className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-widest uppercase">{t('v_blood_pressure')}</h3>
-                  <p className="text-lg sm:text-xl font-black text-slate-900">{t('v_cardio')}</p>
-                </div>
-              </div>
-              <div className="bg-red-50 px-3 py-1.5 rounded-full text-[9px] font-black text-red-600 tracking-widest uppercase">Live tracking</div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             
-            <div className="flex flex-col sm:flex-row items-center justify-between sm:space-x-12 mb-8 sm:mb-10 w-full gap-6 sm:gap-0 font-display">
-              <div className="flex flex-col items-center sm:items-start text-center">
-                <span className="text-5xl sm:text-6xl font-black font-mono text-slate-900 tracking-tighter leading-none">{stats.bp_sys}</span>
-                <span className="text-[9px] font-bold text-slate-400 tracking-widest mt-2 uppercase">{t('v_systolic')} (mmHg)</span>
-              </div>
-              <div className="hidden sm:block text-4xl font-black text-slate-200">/</div>
-              <div className="flex flex-col items-center sm:items-start text-center">
-                <span className="text-5xl sm:text-6xl font-black font-mono text-slate-900 tracking-tighter leading-none">{stats.bp_dia}</span>
-                <span className="text-[9px] font-bold text-slate-400 tracking-widest mt-2 uppercase">{t('v_diastolic')} (mmHg)</span>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 flex flex-col space-y-3">
-              <span className="text-[10px] font-black text-slate-400 tracking-widest text-center sm:text-left">{t('save')} systolic</span>
-              <div className="flex items-center justify-between gap-4">
-                <button onClick={() => updateStat('bp_sys', stats.bp_sys - 1)} className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center active:bg-slate-100 active:scale-95 text-slate-400 font-bold text-lg transition-transform shadow-sm">-</button>
-                <button onClick={() => updateStat('bp_sys', stats.bp_sys + 1)} className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center active:bg-slate-100 active:scale-95 text-slate-400 font-bold text-lg transition-transform shadow-sm">+</button>
-              </div>
-            </div>
-            <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 flex flex-col space-y-3">
-              <span className="text-[10px] font-black text-slate-400 tracking-widest text-center sm:text-left">{t('save')} diastolic</span>
-              <div className="flex items-center justify-between gap-4">
-                <button onClick={() => updateStat('bp_dia', stats.bp_dia - 1)} className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center active:bg-slate-100 active:scale-95 text-slate-400 font-bold text-lg transition-transform shadow-sm">-</button>
-                <button onClick={() => updateStat('bp_dia', stats.bp_dia + 1)} className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center active:bg-slate-100 active:scale-95 text-slate-400 font-bold text-lg transition-transform shadow-sm">+</button>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            {/* 1. Cardio & Blood Pressure Card */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-6 sm:p-7 border border-slate-100 shadow-[0_15px_40px_rgba(14,165,233,0.06)] flex flex-col justify-between text-left">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center shadow-xs">
+                    <Heart className="w-6 h-6" />
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 border border-rose-100 text-rose-600">
+                    Cardio Status
+                  </span>
+                </div>
 
-        {/* Steps Card */}
-        <motion.div 
-          variants={itemVariants}
-          className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-900/5 flex flex-col justify-between transition-colors"
-        >
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 shrink-0">
-              <Footprints className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-widest uppercase">{t('v_activity')}</h3>
-              <p className="text-lg sm:text-xl font-black text-slate-900">{t('v_movement')}</p>
-            </div>
-          </div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Blood Pressure
+                </p>
+                
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {stats.bp_sys}/{stats.bp_dia}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">mmHg</span>
+                </div>
 
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center mb-6">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-50" />
-                <circle 
-                  cx="50%" cy="50%" r="45%" stroke="currentColor" strokeWidth="8" fill="transparent" 
-                  strokeDasharray="283" 
-                  strokeDashoffset={283 * (1 - Math.min((localSteps ?? stats.steps) / stats.stepsGoal, 1))} 
-                  className={`transition-all duration-1000 ease-out ${ (localSteps ?? stats.steps) >= stats.stepsGoal ? 'text-green-500' : 'text-primary-600'}`}
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className={`text-2xl sm:text-3xl font-black tracking-tighter transition-colors ${(localSteps ?? stats.steps) >= stats.stepsGoal ? 'text-green-600 dark:text-green-400' : 'text-slate-900 dark:text-white'}`}>
-                  {(localSteps ?? stats.steps) >= 1000 ? `${((localSteps ?? stats.steps)/1000).toFixed(1)}k` : (localSteps ?? stats.steps)}
-                </span>
-                <span className="text-[8px] sm:text-[9px] font-bold text-slate-400 tracking-widest mt-1 uppercase">{t('v_steps')}</span>
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs text-slate-500 font-medium">Optimal Resting Rhythm</span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 space-y-2.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-semibold">Systolic</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => updateStat('bp_sys', stats.bp_sys - 1)}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer active:scale-95"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-slate-900">{stats.bp_sys}</span>
+                    <button 
+                      onClick={() => updateStat('bp_sys', stats.bp_sys + 1)}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-semibold">Diastolic</span>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => updateStat('bp_dia', stats.bp_dia - 1)}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer active:scale-95"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-8 text-center font-bold text-slate-900">{stats.bp_dia}</span>
+                    <button 
+                      onClick={() => updateStat('bp_dia', stats.bp_dia + 1)}
+                      className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center justify-center cursor-pointer active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex items-center w-full justify-center">
-               {editingGoal === 'steps' ? (
-                 <input 
-                   type="number" 
-                   autoFocus
-                   className="w-24 bg-slate-50 border-2 border-primary-200 rounded-xl px-3 py-2 text-xs font-black text-center focus:outline-none focus:border-primary-500 transition-colors"
-                   defaultValue={stats.stepsGoal}
-                   onBlur={(e) => {
-                     updateStat('stepsGoal', parseInt(e.target.value) || 10000);
-                     setEditingGoal(null);
-                   }}
-                 />
-               ) : (
-                 <button onClick={() => setEditingGoal('steps')} className="flex items-center text-[10px] font-black text-slate-400 tracking-widest cursor-pointer hover:text-primary-600 transition-colors bg-slate-50 px-4 py-2 rounded-xl active:scale-95">
-                   {t('save')}: {stats.stepsGoal.toLocaleString()}
-                   <Settings className="w-3 h-3 ml-2 opacity-60" />
-                 </button>
-               )}
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-3 mt-auto">
-            <button 
-              onClick={() => setIsTracking(!isTracking)}
-              className={`w-full font-black py-4 sm:py-5 rounded-2xl text-[10px] tracking-[0.2em] transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                isTracking ? 'bg-green-600 text-white shadow-xl shadow-green-500/20' : 'bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/10'
-              }`}
-            >
-              <Zap className={`w-4 h-4 ${isTracking ? 'animate-pulse' : ''}`} />
-              {isTracking ? t('v_tracking_on') : t('v_start_tracking')}
-            </button>
-          </div>
-        </motion.div>
+            {/* 2. Step Activity Tracker Card */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-6 sm:p-7 border border-slate-100 shadow-[0_15px_40px_rgba(14,165,233,0.06)] flex flex-col justify-between text-left">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-500 flex items-center justify-center shadow-xs">
+                    <Footprints className="w-6 h-6" />
+                  </div>
+                  <button
+                    onClick={() => setEditingGoal(editingGoal === 'steps' ? null : 'steps')}
+                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    title="Edit Step Target"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
 
-        {/* Hydration Card */}
-        <motion.div 
-          variants={itemVariants}
-          className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-6 sm:p-8 shadow-xl shadow-slate-900/5 flex flex-col justify-between transition-colors"
-        >
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 shrink-0">
-              <Droplets className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-[10px] sm:text-[11px] font-black text-slate-400 tracking-widest uppercase">{t('v_hydration')}</h3>
-              <p className="text-lg sm:text-xl font-black text-slate-900">{t('v_water_intake')}</p>
-            </div>
-          </div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Daily Movement
+                </p>
 
-          <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 sm:gap-3 mb-8">
-            {[...Array(Math.max(stats.waterGoal, 8))].map((_, i) => (
-              <div 
-                key={i} 
-                className={`aspect-[3/4] rounded-xl border-2 transition-all duration-500 ${
-                  i < stats.water ? 'bg-blue-500 border-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-slate-50 border-slate-100 opacity-60'
-                } ${i >= stats.waterGoal ? 'hidden opacity-0' : 'block'}`}
-              >
-                {i < stats.water && (
-                   <motion.div 
-                     initial={{ scale: 0 }} 
-                     animate={{ scale: 1 }} 
-                     className="w-full h-full flex items-center justify-center"
-                   >
-                     <Droplets className="w-3 h-3 md:w-4 md:h-4 text-white fill-current" />
-                   </motion.div>
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {currentSteps.toLocaleString()}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">/ {stats.stepsGoal.toLocaleString()}</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                  <div 
+                    className="h-full bg-sky-500 rounded-full transition-all duration-500"
+                    style={{ width: `${stepsPercent}%` }}
+                  />
+                </div>
+
+                {editingGoal === 'steps' && (
+                  <div className="p-2.5 bg-slate-50 rounded-xl mb-3 flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      defaultValue={stats.stepsGoal}
+                      onBlur={(e) => {
+                        updateStat('stepsGoal', parseInt(e.target.value) || 10000);
+                        setEditingGoal(null);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-sky-500"
+                      placeholder="Goal (e.g. 10000)"
+                    />
+                    <span className="text-[10px] text-slate-400 font-bold">steps</span>
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
 
-          <div className="flex justify-between items-center mb-8">
-            {editingGoal === 'water' ? (
-              <input 
-                type="number" 
-                autoFocus
-                className="w-20 bg-slate-50 border-2 border-primary-200 rounded-xl px-2 py-1.5 text-xs font-black focus:outline-none focus:border-primary-500"
-                defaultValue={stats.waterGoal}
-                onBlur={(e) => {
-                  updateStat('waterGoal', parseInt(e.target.value) || 8);
-                  setEditingGoal(null);
-                }}
-              />
-            ) : (
-              <button onClick={() => setEditingGoal('water')} className="flex items-center text-[10px] font-black text-slate-400 tracking-widest cursor-pointer hover:text-blue-500 transition-colors bg-slate-50 px-3 py-1.5 rounded-xl active:scale-95">
-                {stats.water} / {stats.waterGoal}
-                <Settings className="w-3 h-3 ml-2 opacity-60" />
-              </button>
-            )}
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-          </div>
-
-          <button 
-            onClick={() => incrementStat('water', 1)}
-            disabled={stats.water >= stats.waterGoal}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black py-4 sm:py-5 rounded-2xl text-[10px] tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 active:scale-95 mt-auto"
-          >
-            <Plus className="w-4 h-4" />
-            {t('v_log_glass')}
-          </button>
-        </motion.div>
-        <MedicationReminder />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        {/* Exercise Tracker */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-10 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/20 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-6 sm:gap-0">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
-                <Dumbbell className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="pt-4 border-t border-slate-100">
+                <button
+                  onClick={() => setIsTracking(!isTracking)}
+                  className={`w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                    isTracking 
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-xs' 
+                      : 'bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-600'
+                  }`}
+                >
+                  <Zap className={`w-3.5 h-3.5 ${isTracking ? 'animate-pulse text-white' : 'text-sky-500'}`} />
+                  <span>{isTracking ? 'Live Pedometer Active' : 'Enable Motion Sensor'}</span>
+                </button>
               </div>
+            </div>
+
+            {/* 3. Hydration Tracker Card */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-6 sm:p-7 border border-slate-100 shadow-[0_15px_40px_rgba(14,165,233,0.06)] flex flex-col justify-between text-left">
               <div>
-                <h3 className="text-xl sm:text-2xl font-black tracking-tight leading-tight">{t('v_fitness_log')}</h3>
-                <p className="text-[9px] sm:text-[10px] font-black text-slate-500 tracking-[0.2em] mt-1 uppercase">{t('v_daily_training')}</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center shadow-xs">
+                    <Droplets className="w-6 h-6" />
+                  </div>
+                  <button
+                    onClick={() => setEditingGoal(editingGoal === 'water' ? null : 'water')}
+                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    title="Edit Water Goal"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Hydration Level
+                </p>
+
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {stats.water}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">/ {stats.waterGoal} Glasses</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                  <div 
+                    className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                    style={{ width: `${waterPercent}%` }}
+                  />
+                </div>
+
+                {editingGoal === 'water' && (
+                  <div className="p-2.5 bg-slate-50 rounded-xl mb-3 flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      defaultValue={stats.waterGoal}
+                      onBlur={(e) => {
+                        updateStat('waterGoal', parseInt(e.target.value) || 8);
+                        setEditingGoal(null);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-teal-500"
+                      placeholder="Goal (glasses)"
+                    />
+                    <span className="text-[10px] text-slate-400 font-bold">glasses</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center gap-2">
+                <button
+                  onClick={() => incrementStat('water', 1)}
+                  className="flex-1 py-2.5 px-4 rounded-full text-xs font-bold bg-teal-500 hover:bg-teal-600 text-white transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Log Glass</span>
+                </button>
+                <button
+                  onClick={() => incrementStat('water', -1)}
+                  disabled={stats.water <= 0}
+                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-40 transition-colors cursor-pointer"
+                  title="Undo glass"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
-            <div className="text-left sm:text-right">
-              <p className="text-4xl sm:text-5xl font-black text-white italic">{stats.exercise}<span className="text-xs sm:text-sm font-black text-white/40 tracking-widest ml-2">min</span></p>
-              <button disabled className="text-[10px] font-black text-slate-500 tracking-widest mt-1 sm:mt-2 bg-white/5 px-2 py-1 flex items-center w-max rounded-lg uppercase">
-                {t('dash_of')} {stats.exerciseGoal}m {t('dash_goal')}
+
+            {/* 4. Exercise Tracker Card */}
+            <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-6 sm:p-7 border border-slate-100 shadow-[0_15px_40px_rgba(14,165,233,0.06)] flex flex-col justify-between text-left">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-500 flex items-center justify-center shadow-xs">
+                    <Dumbbell className="w-6 h-6" />
+                  </div>
+                  <button
+                    onClick={() => setEditingGoal(editingGoal === 'exercise' ? null : 'exercise')}
+                    className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    title="Edit Exercise Target"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                  Daily Exercise
+                </p>
+
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+                    {stats.exercise}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">/ {stats.exerciseGoal} Mins</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
+                  <div 
+                    className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                    style={{ width: `${exercisePercent}%` }}
+                  />
+                </div>
+
+                {editingGoal === 'exercise' && (
+                  <div className="p-2.5 bg-slate-50 rounded-xl mb-3 flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      defaultValue={stats.exerciseGoal}
+                      onBlur={(e) => {
+                        updateStat('exerciseGoal', parseInt(e.target.value) || 30);
+                        setEditingGoal(null);
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                      placeholder="Goal (mins)"
+                    />
+                    <span className="text-[10px] text-slate-400 font-bold">mins</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center gap-2">
+                <button
+                  onClick={() => incrementStat('exercise', 10)}
+                  className="flex-1 py-2.5 px-4 rounded-full text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition-all flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+10 Mins</span>
+                </button>
+                <button
+                  onClick={() => incrementStat('exercise', -10)}
+                  disabled={stats.exercise <= 0}
+                  className="p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-40 transition-colors cursor-pointer"
+                  title="Reduce minutes"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* 
+          =======================================================
+          MEDICATION REMINDER MANAGEMENT SECTION
+          =======================================================
+        */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="lg:col-span-2">
+            <MedicationReminder />
+          </div>
+
+          {/* Clinical Health Passport Card */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] p-7 border border-slate-100 shadow-[0_15px_40px_rgba(14,165,233,0.06)] flex flex-col justify-between text-left">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-500 flex items-center justify-center mb-6 shadow-xs">
+                <MedConnectLogo size={28} variant="icon" />
+              </div>
+
+              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight mb-2">
+                Digital Health Passport
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6 font-normal">
+                Encrypted biometric records synchronized across hospitals, verified specialists, and emergency care facilities globally.
+              </p>
+
+              <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+                <div className="flex items-center justify-between text-slate-600">
+                  <span className="font-semibold">Patient Token</span>
+                  <span className="font-mono font-bold text-slate-800">{user?.uid.slice(0, 10)}...</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span className="font-semibold">Encryption</span>
+                  <span className="font-bold text-emerald-600">AES 256-Bit</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600">
+                  <span className="font-semibold">Jurisdiction</span>
+                  <span className="font-bold text-slate-800">Global HIPAA / ISO</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 mt-6 border-t border-slate-100">
+              <button
+                onClick={() => onActionClick?.('chat')}
+                className="w-full py-3 px-5 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>Consult AI Diagnostics</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
-          {/* Progress Bar */}
-          <div className="h-4 bg-white/5 rounded-full mb-8 sm:mb-12 overflow-hidden border border-white/10 relative">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min((stats.exercise / stats.exerciseGoal) * 100, 100)}%` }}
-              className="h-full bg-gradient-to-r from-primary-600 to-primary-400 absolute left-0 top-0"
-            />
-          </div>
-        </motion.div>
+        </div>
 
-        {/* Health Records Summary */}
-        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-6 sm:p-8 md:p-10 flex flex-col shadow-xl shadow-slate-900/5 transition-colors">
-          <div className="flex items-center justify-between mb-8 sm:mb-10">
-            <h4 className="text-[10px] font-black text-slate-400 tracking-[0.2em] flex items-center uppercase text-center w-full">
-              <Activity className="w-4 h-4 mr-2" />
-               {t('dash_vitals_history')}
-            </h4>
+        {/* 
+          =======================================================
+          CLINICAL INTELLIGENCE NETWORK TELEMETRY
+          =======================================================
+        */}
+        <div className="pt-4">
+          <MedicalIntelligencePulse />
+        </div>
+
+        {/* 
+          =======================================================
+          BOTTOM TRUST & GOVERNANCE BAR
+          =======================================================
+        */}
+        <div className="pt-8 sm:pt-12 border-t border-slate-200/80 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-8 font-semibold">
+            <span className="inline-flex items-center gap-1.5 text-emerald-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>HIPAA Protocol Verified</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-slate-600">
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-500" />
+              <span>ISO 27001 Certified</span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-slate-600">
+              <Lock className="w-3 h-3 text-slate-400" />
+              <span>256-Bit End-to-End SSL</span>
+            </span>
           </div>
-          <button className="mt-auto flex items-center justify-center text-[10px] sm:text-xs font-black text-primary-600 tracking-[0.2em] hover:text-primary-700 transition-colors group uppercase">
-            {t('dash_view_expanded')}
-            <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </motion.div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-95"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Exit to Home</span>
+            </button>
+          </div>
+        </div>
+
       </div>
-
-      <motion.div variants={itemVariants} className="mt-16 sm:mt-20 pt-8 sm:pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
-         <div className="flex flex-col sm:flex-row items-center sm:space-x-10 space-y-4 sm:space-y-0 w-full sm:w-auto">
-            <div className="flex items-center space-x-3">
-               <ShieldCheck className="w-5 h-5 text-green-500" />
-               <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{t('dash_hipaa')}</span>
-            </div>
-            <div className="flex items-center space-x-3">
-               <Activity className="w-5 h-5 text-primary-500" />
-               <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase">{t('dash_iso')}</span>
-            </div>
-         </div>
-         <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 w-full sm:w-auto">
-           <button 
-             onClick={onBack}
-             className="flex items-center justify-center font-black text-[10px] sm:text-xs text-white tracking-widest bg-slate-900 hover:bg-slate-800 transition-all rounded-xl px-4 py-2.5 shadow-md active:scale-95 w-full sm:w-auto group uppercase"
-           >
-             <Home className="w-4 h-4 mr-2 group-hover:-translate-y-0.5 transition-transform" />
-             {t('home')}
-           </button>
-           <p className="text-[9px] font-black text-slate-300 tracking-[0.3em]">Patient ID: {user?.uid.slice(0, 12)}</p>
-         </div>
-      </motion.div>
-    </motion.div>
+    </div>
   );
 }
+
+export default PatientDashboard;

@@ -120,7 +120,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors selection:bg-primary-500/30">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors selection:bg-primary-500/30 overflow-x-hidden max-w-full w-full">
       <Navbar 
         onNavigate={handleNavigate} 
         onAuthOpen={(mode) => setAuthModal({ open: true, mode })} 
@@ -129,7 +129,7 @@ function AppContent() {
         unreadNotifications={notifications.filter(n => !n.read).length}
       />
       
-      <main className="relative">
+      <main className={`relative overflow-x-hidden max-w-full w-full ${user && currentView !== 'home' ? 'pb-16 md:pb-0' : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentView}
@@ -148,7 +148,6 @@ function AppContent() {
               <>
                 <Hero onNavigate={handleNavigate} onAuthOpen={(mode) => setAuthModal({ open: true, mode })} />
                 <LandingStickySection />
-                <MedicalIntelligencePulse />
                 <FeaturesSection 
                   onNavigate={handleNavigate} 
                   onAuthOpen={(mode) => setAuthModal({ open: true, mode })}
@@ -231,13 +230,15 @@ function AppContent() {
         <PatientProfileModal onClose={() => setPatientProfileOpen(false)} />
       )}
 
-      <BottomNav 
-        currentView={currentView}
-        onNavigate={handleNavigate}
-        user={user}
-        onAuthOpen={(mode) => setAuthModal({ open: true, mode })}
-        onPatientProfileOpen={() => setPatientProfileOpen(true)}
-      />
+      {user && currentView !== 'home' && (
+        <BottomNav 
+          currentView={currentView}
+          onNavigate={handleNavigate}
+          user={user}
+          onAuthOpen={(mode) => setAuthModal({ open: true, mode })}
+          onPatientProfileOpen={() => setPatientProfileOpen(true)}
+        />
+      )}
     </div>
   );
 }

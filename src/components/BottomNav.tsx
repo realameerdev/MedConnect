@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Home, Search, MessageSquare, User, Activity, Globe } from 'lucide-react';
+import { Home, MessageSquare, User, Activity, Globe, Calendar, Clock, Brain, Stethoscope } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface BottomNavProps {
@@ -11,30 +11,47 @@ interface BottomNavProps {
   onPatientProfileOpen: () => void;
 }
 
-export default function BottomNav({ currentView, onNavigate, user, onAuthOpen, onPatientProfileOpen }: BottomNavProps) {
+export default function BottomNav({ 
+  currentView, 
+  onNavigate, 
+  user, 
+  onAuthOpen, 
+  onPatientProfileOpen 
+}: BottomNavProps) {
   const { t } = useLanguage();
+
   const navItems = [
-    { id: 'home', icon: Home, label: t('nav_home') },
-    { id: 'dashboard', icon: Activity, label: t('nav_portal'), protected: true },
-    { id: 'regional-hub', icon: Globe, label: t('nav_regional'), protected: true },
-    { id: 'chat', icon: MessageSquare, label: t('nav_consult'), protected: true },
+    { id: 'dashboard', icon: Activity, label: 'Portal', protected: true },
+    { id: 'chat', icon: Brain, label: 'AI Doc', protected: true },
+    { id: 'appointments', icon: Clock, label: 'Schedule', protected: true },
+    { id: 'regional-hub', icon: Globe, label: 'Hub', protected: true },
   ];
 
   if (!user) return null;
 
   return (
-    <motion.div 
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe pt-2"
-    >
-      <div className="bg-white/90 backdrop-blur-xl border border-slate-200/50 rounded-[2.5rem] shadow-2xl shadow-slate-900/10 flex items-center justify-around p-2">
+    <div className="md:hidden fixed bottom-3 left-0 right-0 z-50 px-3 pointer-events-none font-manrope">
+      
+      {/* 
+        COMPACT FLOATING BOTTOM DOCK:
+        Styled after the landing page curved dock aesthetic.
+        Active tab expands into a sky-blue pill with label,
+        while inactive tabs remain sleek, compact circular touch targets.
+      */}
+      <div className="pointer-events-auto relative max-w-[340px] xs:max-w-[360px] mx-auto rounded-full bg-white/95 backdrop-blur-2xl border border-sky-200/60 shadow-[0_12px_35px_rgba(14,165,233,0.18)] p-1.5 flex items-center justify-between gap-1">
+        
+        {/* Top Silk Edge Highlight */}
+        <div className="absolute top-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/40 to-transparent pointer-events-none rounded-full" />
+
+        {/* Dynamic Nav Items */}
         {navItems.map((item) => {
           const isActive = currentView === item.id;
+          const Icon = item.icon;
+
           return (
             <motion.button
               key={item.id}
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.93 }}
               onClick={() => {
                 if (item.protected && !user) {
                   onAuthOpen('signin');
@@ -42,33 +59,45 @@ export default function BottomNav({ currentView, onNavigate, user, onAuthOpen, o
                   onNavigate(item.id);
                 }
               }}
-              className={`flex flex-col items-center justify-center w-16 h-16 rounded-3xl transition-all relative ${
-                isActive ? 'text-primary-600' : 'text-slate-400'
+              className={`flex items-center justify-center transition-all cursor-pointer select-none ${
+                isActive 
+                  ? 'bg-sky-500 text-white rounded-full py-1.5 px-3 shadow-xs font-bold text-xs gap-1.5' 
+                  : 'p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 rounded-full'
               }`}
+              aria-label={item.label}
             >
-              <item.icon className={`w-6 h-6 ${isActive ? 'fill-primary-600/10' : ''}`} />
-              <span className="text-[8px] font-black tracking-widest mt-1.5">{item.label}</span>
+              <Icon className="w-4.5 h-4.5 shrink-0" />
               {isActive && (
-                <motion.div 
-                  layoutId="activeTab"
-                  className="absolute -top-1 w-1 h-1 bg-primary-600 rounded-full"
-                />
+                <motion.span 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="whitespace-nowrap text-[11px] font-bold leading-none tracking-tight"
+                >
+                  {item.label}
+                </motion.span>
               )}
             </motion.button>
           );
         })}
-        
+
+        {/* Profile / Account Trigger */}
         <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => user ? onPatientProfileOpen() : onAuthOpen('signin')}
-          className="flex flex-col items-center justify-center w-16 h-16 rounded-3xl text-slate-400"
+          whileTap={{ scale: 0.93 }}
+          onClick={() => onPatientProfileOpen()}
+          className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 rounded-full transition-all cursor-pointer flex items-center justify-center"
+          title="Patient Profile"
+          aria-label="Patient Profile"
         >
-          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center overflow-hidden transition-colors ${user ? 'border-primary-500 bg-primary-50' : 'border-slate-200 bg-slate-100'}`}>
-            <User className={`w-4 h-4 ${user ? 'text-primary-600' : 'text-slate-400'}`} />
+          <div className="w-6.5 h-6.5 rounded-full bg-slate-100 border border-slate-200/80 flex items-center justify-center overflow-hidden">
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="User" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <User className="w-3.5 h-3.5 text-slate-500" />
+            )}
           </div>
-          <span className="text-[8px] font-black tracking-widest mt-1.5 uppercase">{user ? t('nav_passport') : t('signin')}</span>
         </motion.button>
+
       </div>
-    </motion.div>
+    </div>
   );
 }

@@ -3,63 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Document ID: {userId}
-    // Fields:
-    //   - uid: string (required, immutable)
-    //   - name: string (required)
-    //   - email: string (required)
-    //   - country: string (required)
-    //   - age: number (required)
-    //   - role: string (required, enum: ['patient', 'doctor', 'admin'])
-    //   - createdAt: string (required, immutable)
-    //
-    // Collection: doctors
-    // Document ID: {doctorId}
-    // Fields:
-    //   - uid: string (required, immutable)
-    //   - name: string (required)
-    //   - specialty: string (required)
-    //   - availability: string (required, enum: ['available', 'busy', 'offline'])
-    //   - rating: number (optional)
-    //   - imageUrl: string (optional)
-    //
-    // Collection: appointments
-    // Document ID: {appointmentId}
-    // Fields:
-    //   - patientId: string (required, immutable)
-    //   - doctorId: string (required, immutable)
-    //   - date: string (required)
-    //   - time: string (required)
-    //   - status: string (required, enum: ['scheduled', 'completed', 'cancelled'])
-    //   - createdAt: string (required, immutable)
-    //
-    // Collection: messages
-    // Document ID: {messageId}
-    // Fields:
-    //   - consultationId: string (required, immutable)
-    //   - senderId: string (required, immutable)
-    //   - text: string (required)
-    //   - timestamp: number (required, immutable)
-    //
-    // Collection: daily_stats (subcollection of users)
-    // Document ID: {dateStr}
-    // Fields:
-    //   - steps: number (required)
-    //   - stepsGoal: number (required)
-    //   - water: number (required)
-    //   - waterGoal: number (required)
-    //   - exercise: number (required)
-    //   - exerciseGoal: number (required)
-    //   - bp_sys: number (required)
-    //   - bp_dia: number (required)
-    //
-    // ===============================================================
-
-    // ===============================================================
     // Helper Functions
     // ===============================================================
     function isAuthenticated() {
@@ -159,20 +102,30 @@ service cloud.firestore {
              data.timestamp is number;
     }
 
+    function isValidMedication(data) {
+      return hasOnlyAllowedFields(['userId', 'name', 'dosage', 'time']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.dosage is string && data.dosage.size() > 0 && data.dosage.size() < 200 &&
+             data.time is string && data.time.size() > 0 && data.time.size() < 20;
+    }
+
     function isValidDailyStats(data) {
-      return hasOnlyAllowedFields(['steps', 'stepsGoal', 'water', 'waterGoal', 'exercise', 'exerciseGoal', 'bp_sys', 'bp_dia']) &&
-             data.steps is number && data.steps >= 0 &&
-             data.stepsGoal is number && data.stepsGoal > 0 &&
-             data.water is number && data.water >= 0 &&
-             data.waterGoal is number && data.waterGoal > 0 &&
-             data.exercise is number && data.exercise >= 0 &&
-             data.exerciseGoal is number && data.exerciseGoal > 0 &&
-             data.bp_sys is number && data.bp_sys > 0 &&
-             data.bp_dia is number && data.bp_dia > 0;
+      return (
+        (!('steps' in data) || (data.steps is number && data.steps >= 0)) &&
+        (!('stepsGoal' in data) || (data.stepsGoal is number && data.stepsGoal > 0)) &&
+        (!('water' in data) || (data.water is number && data.water >= 0)) &&
+        (!('waterGoal' in data) || (data.waterGoal is number && data.waterGoal > 0)) &&
+        (!('exercise' in data) || (data.exercise is number && data.exercise >= 0)) &&
+        (!('exerciseGoal' in data) || (data.exerciseGoal is number && data.exerciseGoal > 0)) &&
+        (!('bp_sys' in data) || (data.bp_sys is number && data.bp_sys > 0)) &&
+        (!('bp_dia' in data) || (data.bp_dia is number && data.bp_dia > 0)) &&
+        (!('notifiedGoals' in data) || data.notifiedGoals is list)
+      );
     }
 
     // ===============================================================
-    // Rules
+    // Collection Rules
     // ===============================================================
     
     match /users/{userId} {
@@ -182,14 +135,18 @@ service cloud.firestore {
       allow update: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() && (request.resource.data.role == resource.data.role || isAdmin()) && request.resource.data.createdAt == resource.data.createdAt;
 
       match /daily_stats/{dateStr} {
-        allow read, write: if isOwner(userId) || isAdmin();
-        allow create, update: if (isOwner(userId) || isAdmin()) && isValidDailyStats(request.resource.data);
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if (isOwner(userId) || isAdmin()) && isValidDailyStats(request.resource.data);
+      }
+
+      match /medications/{medicationId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if (isOwner(userId) || isAdmin()) && isValidMedication(request.resource.data);
+        allow delete: if isOwner(userId) || isAdmin();
       }
     }
 
     match /blood_donors/{donorId} {
-      // Allow searching for donors purely by bloodGroup query - queries must filter by bloodGroup
-      // Note: we check resource.data.bloodGroup to ensure secure list queries
       allow list: if isAuthenticated() && resource.data.bloodGroup != null;
       allow get: if isAuthenticated();
       allow create: if isAuthenticated() && isOwner(donorId) && isValidBloodDonor(request.resource.data);
@@ -205,9 +162,10 @@ service cloud.firestore {
 
     match /appointments/{appointmentId} {
       allow get: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin());
-      allow list: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId);
+      allow list: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin());
       allow create: if isAuthenticated() && isValidAppointment(request.resource.data) && (request.resource.data.patientId == request.auth.uid || isAdmin());
       allow update: if isAuthenticated() && isValidAppointment(request.resource.data) && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin()) && request.resource.data.patientId == resource.data.patientId && request.resource.data.doctorId == resource.data.doctorId && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.doctorId || isAdmin());
     }
 
     match /messages/{messageId} {

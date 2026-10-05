@@ -6,7 +6,8 @@ import {
   GoogleAuthProvider, 
   signOut,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -18,6 +19,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string, country: string, age: number, role: 'patient' | 'doctor') => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   completeProfile: (name: string, country: string, age: number, role: 'patient' | 'doctor') => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -94,6 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
+  const sendPasswordReset = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   const completeProfile = async (name: string, country: string, age: number, role: 'patient' | 'doctor') => {
     if (!user) throw new Error('No authenticated user found');
     
@@ -129,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, loading, signInWithGoogle, signUpWithEmail, signInWithEmail, completeProfile, logout }}>
+    <AuthContext.Provider value={{ user, userRole, loading, signInWithGoogle, signUpWithEmail, signInWithEmail, sendPasswordReset, completeProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Send, Activity, ShieldCheck, HelpCircle, Sparkles, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Send, Activity, ShieldCheck, HelpCircle, User as UserIcon } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
 import { motion, AnimatePresence } from 'motion/react';
+import { MedConnectLogo } from './MedConnectLogo';
 
 interface Message {
   id: string;
@@ -111,7 +112,7 @@ export function SymptomChecker({ onBack }: { onBack: () => void }) {
           General Triage
         </motion.button>
         <div className="flex items-center space-x-2 bg-primary-50 px-3 py-1 rounded-full border border-primary-100">
-          <Sparkles className="w-3.5 h-3.5 text-primary-600" />
+          <Activity className="w-3.5 h-3.5 text-primary-600" />
           <span className="text-[10px] font-black text-primary-700 uppercase tracking-widest">AI Clinical Intelligence</span>
         </div>
       </div>
@@ -121,14 +122,18 @@ export function SymptomChecker({ onBack }: { onBack: () => void }) {
         <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30 backdrop-blur-sm">
           <div className="flex items-center">
             <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-primary-600 flex items-center justify-center border-2 border-white shadow-md">
-                <ShieldCheck className="w-8 h-8 text-white" />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-white shadow-md bg-white">
+                <MedConnectLogo size={42} variant="icon" />
               </div>
               <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
             </div>
-            <div className="ml-4 text-left">
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">MedConnect AI</h3>
-              <p className="text-[10px] font-black text-primary-600 uppercase tracking-[0.2em]">Diagnostic Assistant</p>
+            <div className="ml-4 text-left font-manrope">
+              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight flex items-center">
+                <span className="italic">Med</span>
+                <span className="text-primary-600 not-italic ml-0.5">Connect</span>
+                <span className="ml-2 text-xs uppercase tracking-widest px-2 py-0.5 bg-primary-50 text-primary-600 rounded-md border border-primary-100 font-bold">AI</span>
+              </h3>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Clinical Triage Assistant</p>
             </div>
           </div>
           <div className="hidden sm:flex flex-col items-end">
@@ -159,8 +164,8 @@ export function SymptomChecker({ onBack }: { onBack: () => void }) {
                 <div className={`flex max-w-[90%] sm:max-w-[75%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className="flex-shrink-0">
                     {msg.sender === 'ai' ? (
-                      <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center border border-primary-500 shadow-lg shadow-primary-600/20">
-                        <Activity className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center border border-slate-100 shadow-md">
+                        <MedConnectLogo size={28} variant="icon" />
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-slate-800 ml-4">

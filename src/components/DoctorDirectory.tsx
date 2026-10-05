@@ -3,7 +3,7 @@ import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Star, Clock, Video, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { ChevronDown, Clock, Video, Calendar as CalendarIcon, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export interface Doctor {
@@ -160,7 +160,7 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
               {specialties.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-               <Star className="w-4 h-4 fill-current fill-transparent" />
+               <ChevronDown className="w-4 h-4" />
             </div>
           </div>
 
@@ -225,11 +225,10 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
                   <h3 className="text-2xl font-black text-slate-900 mb-1 uppercase tracking-tight">{doctor.name}</h3>
                   <p className="text-primary-600 font-bold text-[10px] uppercase tracking-[0.15em]">{doctor.specialty}</p>
                   
-                  <div className="flex items-center justify-center mt-4 space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < Math.floor(doctor.rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}`} />
-                    ))}
-                    <span className="text-[10px] font-black text-slate-400 ml-2">{doctor.rating}</span>
+                  <div className="flex items-center justify-center mt-3">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                      Rating: {doctor.rating} / 5.0
+                    </span>
                   </div>
                 </div>
 

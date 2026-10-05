@@ -1,6 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronRight, Activity, Shield, Users, Clock, Globe, Lock, Info, CheckCircle2, Sparkles, FileText, Award, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { 
+  X, 
+  Activity, 
+  Shield, 
+  Users, 
+  Clock, 
+  Globe, 
+  Lock, 
+  Info, 
+  CheckCircle2, 
+  FileText, 
+  Award, 
+  Brain, 
+  HeartPulse, 
+  Stethoscope, 
+  Zap, 
+  ShieldCheck,
+  Check
+} from 'lucide-react';
 
 export type FooterContentType = 
   | 'how-it-works' 
@@ -17,319 +35,386 @@ interface InfoPanelProps {
   onClose: () => void;
 }
 
-const contentData: Record<FooterContentType, { title: string; subtitle: string; icon: any; content: (zoom: number) => React.ReactNode }> = {
-  'how-it-works': {
-    title: "How It Works",
-    subtitle: "Built for Clinical Scale & Precision",
-    icon: Activity,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Architectural Overview</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            MedConnect is built upon a resilient distributed lattice of clinical intelligence. Our engineering philosophy prioritizes three core pillars: Deterministic Security, Low-Latency Synchronicity, and Human-Centric AI Augmentation. By bridging the gap between legacy medical infrastructure and bleeding-edge cloud technologies, we've created a nervous system for modern healthcare that scales across borders and jurisdictions.
-          </p>
-          <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-            The platform's underlying stack utilizes an event-driven micro-frontend architecture, ensuring that patient data flows as a synchronous stream rather than disconnected fragments. We leverage advanced vector-based indexing for symptom checking and military-grade encryption for all peer-to-peer clinical consultations. Every component of MedConnect, from the biometric sync engine to the real-time doctor directory, is hardened against both technical failure and unauthorized access, maintaining an uptime of 99.99% for critical triage services.
-          </p>
-        </section>
+interface ContentDefinition {
+  title: string;
+  subtitle: string;
+  tag: string;
+  icon: React.ElementType;
+  renderContent: () => React.ReactNode;
+}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+const contentData: Record<FooterContentType, ContentDefinition> = {
+  'how-it-works': {
+    title: "How MedConnect Works",
+    subtitle: "Clinical intelligence architecture built for rapid triage & verified care",
+    tag: "Platform Architecture",
+    icon: Activity,
+    renderContent: () => (
+      <div className="space-y-6 sm:space-y-8 text-left font-manrope">
+        {/* Overview Box */}
+        <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-sky-50/70 border border-sky-100">
+          <h4 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight mb-2">
+            Clinical Synchrony at Scale
+          </h4>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+            MedConnect unifies artificial intelligence diagnostics with board-certified clinical oversight. Our four-step workflow ensures patients receive immediate assessment, live biometric tracking, and direct access to licensed practitioners worldwide.
+          </p>
+        </div>
+
+        {/* 4 Steps Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
           {[
-            { step: "01", title: "Distributed Identity", desc: "Our platform begins with absolute identity integrity. We utilize multi-factor biometric validation synced across decentralized identity providers. This ensures that a patient's medical history is only accessible through their own biological and digital signature, eliminating the risk of record spoofing or institutional data leaks." },
-            { step: "02", title: "Intelligent Triage", desc: "The MedConnect Neural Engine analyzes over 12,000 symptom vectors in under 1.2ms. This isn't just a search; it's a semantic understanding of patient discomfort. The system cross-references real-time data with global medical journals to suggest the most accurate clinical path before a human specialist even enters the loop." },
-            { step: "03", title: "Encrypted Synapse", desc: "Clinical consultations occur within an 'Encrypted Synapse'—a high-bandwidth, end-to-end encrypted video and data tunnel. This allows specialists to view live vitals directly on their HUD while conversing with patients, facilitating immediate diagnostic decisions without the typical data lag found in legacy telehealth tools." },
-            { step: "04", title: "Recursive Monitoring", desc: "Care is managed through recursive monitoring loops. Our automated agents track recovery progress and vital sign trends, triggering immediate human escalation if a patient's recovery trajectory deviates from expected clinical benchmarks." }
-          ].map((item, i) => (
-            <div key={i} className="flex flex-col items-start space-y-3 bg-white/5 p-6 md:p-8 rounded-3xl md:rounded-[2.5rem] border border-white/5 hover:bg-white/10 transition-colors">
-              <span className="text-4xl md:text-5xl font-display font-black text-primary-500 italic leading-none">{item.step}</span>
-              <div>
-                <h4 className="text-base md:text-lg font-black text-white uppercase tracking-widest mb-2 md:mb-3">{item.title}</h4>
-                <p className="text-xs text-slate-400 leading-relaxed font-medium">{item.desc}</p>
+            {
+              step: "01",
+              title: "AI Symptom Triage",
+              desc: "Natural language analysis cross-referenced with 12,000+ clinical evidence vectors in under 1.2 seconds.",
+              icon: Brain,
+              accent: "text-sky-500 bg-sky-50"
+            },
+            {
+              step: "02",
+              title: "Vital Telemetry Sync",
+              desc: "Continuous synchronization of heart rate, blood pressure, and sleep biomarkers with instant physician alerts.",
+              icon: HeartPulse,
+              accent: "text-teal-600 bg-teal-50"
+            },
+            {
+              step: "03",
+              title: "Doctor Consultation",
+              desc: "Direct encrypted video, audio, or chat consultations with licensed specialists across 40+ medical specialties.",
+              icon: Stethoscope,
+              accent: "text-blue-600 bg-blue-50"
+            },
+            {
+              step: "04",
+              title: "Prescription & Care",
+              desc: "Integrated dosage reminders, digital health passport tokens, and automated emergency escalation routing.",
+              icon: ShieldCheck,
+              accent: "text-emerald-600 bg-emerald-50"
+            }
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.step} className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50/80 border border-slate-100 hover:border-sky-200 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-2xs ${item.accent}`}>
+                    <Icon className="w-4.5 h-4.5" />
+                  </div>
+                  <span className="text-xs font-mono font-bold text-slate-400">Step {item.step}</span>
+                </div>
+                <h5 className="text-sm font-extrabold text-slate-900 tracking-tight mb-1">{item.title}</h5>
+                <p className="text-xs text-slate-500 leading-relaxed font-normal">{item.desc}</p>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Security Highlight */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-900">100% HIPAA & GDPR Compliant</p>
+            <p className="text-[11px] text-slate-500 font-normal">All clinical interactions are sealed with AES 256-bit encryption end-to-end.</p>
+          </div>
+        </div>
+      </div>
+    )
+  },
+
+  'medical-network': {
+    title: "Verified Specialist Network",
+    subtitle: "A curated global lattice of board-certified practitioners across 40+ specialties",
+    tag: "Doctor Directory & Credentials",
+    icon: Stethoscope,
+    renderContent: () => (
+      <div className="space-y-6 sm:space-y-8 text-left font-manrope">
+        {/* Network Highlights */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-xl sm:text-2xl font-extrabold text-sky-500 tracking-tight">500+</p>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Specialists</p>
+          </div>
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">40+</p>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Specialties</p>
+          </div>
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 tracking-tight">Top 3%</p>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Acceptance</p>
+          </div>
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">&lt; 2 min</p>
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Average Wait</p>
+          </div>
+        </div>
+
+        {/* Credentialing Standards Card */}
+        <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-sky-50/70 border border-sky-100 space-y-3">
+          <div className="flex items-center gap-2 text-sky-600">
+            <ShieldCheck className="w-5 h-5 text-sky-500" />
+            <h4 className="text-sm sm:text-base font-extrabold tracking-tight">Rigorous 12-Point Credentialing Protocol</h4>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Every practitioner on MedConnect undergoes primary source medical license verification, board certifications review, malpractice screening, and ongoing peer evaluation through our Clinical Quality Index (CQI).
+          </p>
+        </div>
+
+        {/* Specialty Pillars */}
+        <div className="space-y-2.5">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Key Clinical Disciplines</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {[
+              { name: "Cardiology & Vascular", desc: "Arrhythmia detection, hypertension management" },
+              { name: "Neurology & Cognitive", desc: "Migraine triage, cognitive assessment, sleep" },
+              { name: "Internal Medicine", desc: "Complex diagnostics, metabolic health, preventative" },
+              { name: "Pediatrics & Family Care", desc: "Childhood health, acute viral care, vaccinations" }
+            ].map((spec, i) => (
+              <div key={i} className="p-3.5 rounded-2xl bg-white border border-slate-100 flex items-start gap-2.5">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-extrabold text-slate-900">{spec.name}</p>
+                  <p className="text-[11px] text-slate-500">{spec.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  },
+
+  'patient-portal': {
+    title: "Patient Health Portal",
+    subtitle: "Unified command center for your vitals, prescriptions, and encrypted health passport",
+    tag: "Digital Health Passport",
+    icon: Activity,
+    renderContent: () => (
+      <div className="space-y-6 sm:space-y-8 text-left font-manrope">
+        {/* Main Banner */}
+        <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/15">
+          <h4 className="text-lg sm:text-xl font-extrabold tracking-tight mb-2">
+            Your Health Records, Fully Owned By You
+          </h4>
+          <p className="text-xs sm:text-sm text-sky-100 leading-relaxed font-normal">
+            The MedConnect Portal aggregates real-time biometric streams, doctor consultation notes, prescription schedules, and verified lab results into a single sovereign dashboard.
+          </p>
+        </div>
+
+        {/* Portal Features Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-sky-500 mb-1">Live Telemetry</p>
+            <p className="text-sm font-extrabold text-slate-900">Continuous Vitals</p>
+            <p className="text-[11px] text-slate-500 mt-1 leading-snug">Steps, hydration, sleep, and blood pressure tracked synchronously.</p>
+          </div>
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mb-1">Encrypted Vault</p>
+            <p className="text-sm font-extrabold text-slate-900">AES 256-Bit Vault</p>
+            <p className="text-[11px] text-slate-500 mt-1 leading-snug">Patient data is encrypted at rest and in transit with zero third-party sharing.</p>
+          </div>
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 mb-1">Portability</p>
+            <p className="text-sm font-extrabold text-slate-900">Global Passport</p>
+            <p className="text-[11px] text-slate-500 mt-1 leading-snug">Export ISO-standard clinical files readable by hospitals globally.</p>
+          </div>
+        </div>
+
+        {/* Direct Action Notice */}
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-xs font-semibold text-slate-700">Patient Portal is active in your clinical suite</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+
+  'safety-protocols': {
+    title: "Clinical Safety Protocols",
+    subtitle: "Zero-trust safeguards, AI validation safeguards, and instant emergency escalation",
+    tag: "Patient Safety First",
+    icon: Shield,
+    renderContent: () => (
+      <div className="space-y-6 sm:space-y-8 text-left font-manrope">
+        {/* Core Principles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+          {[
+            {
+              title: "Human Physician Oversight",
+              desc: "AI triage assessments provide diagnostic guidance but never replace human board-certified judgment."
+            },
+            {
+              title: "Zero-Trust Encryption",
+              desc: "All clinical consultations and vitals streams are protected with TLS 1.3 and military-grade AES-256 cipher."
+            },
+            {
+              title: "24/7 Urgent Escalation",
+              desc: "Sudden anomalies in blood pressure or heart rate trigger automated alerts and priority routing to emergency dispatch."
+            },
+            {
+              title: "Biometric Identity Guard",
+              desc: "Multi-factor authentication and hardware verification protect your medical history against unauthorized access."
+            }
+          ].map((item, i) => (
+            <div key={i} className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-slate-50/80 border border-slate-100 space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+                <h5 className="text-sm font-extrabold text-slate-900 tracking-tight">{item.title}</h5>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed font-normal">{item.desc}</p>
             </div>
           ))}
         </div>
 
-        <section className="p-6 md:p-10 bg-primary-600/5 border border-primary-500/20 rounded-3xl md:rounded-[3rem] space-y-4 md:space-y-6">
-          <h4 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tight">The Technical Build</h4>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            MedConnect's frontend is a high-performance React application optimized for frame-perfect responsiveness, ensuring clinicians can interact with medical data without visual stutter or input lag. The backend is a serverless, horizontally-scaling ecosystem that handles millions of concurrent biometric streams. Our 'Medical Intelligence Pulse' is a direct representation of this data lattice, showing real-time clinical connections. 
+        {/* Safety Quote Box */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-sky-50/60 border border-sky-100 text-center">
+          <p className="text-xs text-sky-800 font-medium italic">
+            "Clinical safety is not a secondary feature; it is the non-negotiable foundation of everything we build at MedConnect."
           </p>
-        </section>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-sky-500 mt-1.5">— MedConnect Safety Board</p>
+        </div>
       </div>
     )
   },
-  'medical-network': {
-    title: "Medical Network",
-    subtitle: "A Global Lattice of Professional Expertise",
-    icon: Globe,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">About Our Network</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            The MedConnect Specialist Lattice is not merely a directory; it is a meticulously curated high-performance network of the world's leading medical professionals. By aggregating specialists across 40+ jurisdictions, we provide a borderless medical expertise tier that was previously inaccessible to the general public.
-          </p>
-          <p className="text-slate-400 text-xs sm:text-sm leading-relaxed">
-            We utilize a proprietary 'Clinical Quality Index' (CQI) to monitor and rank provider performance. This index incorporates peer reviews, patient recovery rates, and adherence to the latest international clinical guidelines. This ensures that every specialist within our lattice isn't just board-certified, but is actively contributing to the cutting edge of their respective medical field.
-          </p>
-        </section>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
-          <div className="p-6 md:p-10 bg-primary-600/10 border border-primary-500/20 rounded-3xl md:rounded-[3.5rem] relative overflow-hidden group">
-            <Users className="w-12 h-12 md:w-20 md:h-20 text-primary-500 mb-6 md:mb-8 opacity-40 group-hover:scale-110 transition-transform duration-500" />
-            <h4 className="text-2xl md:text-3xl font-display font-black text-white uppercase italic tracking-tighter mb-4 md:mb-6">Credentialing Standards</h4>
-            <p className="text-base md:text-lg text-slate-300 leading-relaxed">
-              Acceptance into the MedConnect lattice requires a rigorous 12-point verification process. This includes primary source verification of all medical degrees, active licensure status, and a clear history of malpractice-free practice. We only accept the top 3% of applicants worldwide.
+  'terms': {
+    title: "Terms of Service",
+    subtitle: "Clinical platform usage agreement & digital healthcare guidelines",
+    tag: "Legal & Usage Terms",
+    icon: FileText,
+    renderContent: () => (
+      <div className="space-y-5 sm:space-y-6 text-left font-manrope">
+        <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-100">
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            By accessing or using the MedConnect platform, you agree to comply with our service standards, patient responsibilities, and medical consultation terms outlined below.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 space-y-1.5">
+            <h5 className="text-xs sm:text-sm font-extrabold text-slate-900">1. Scope of Digital Care</h5>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              MedConnect provides AI-powered triage and remote telemedicine consultations. In severe or life-threatening emergencies, patients must immediately contact local physical emergency services (e.g., 911 / 999 / 112).
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="p-8 md:p-10 bg-white/5 border border-white/5 rounded-3xl md:rounded-[2.5rem] text-center">
-              <p className="text-4xl md:text-6xl font-display font-black text-white mb-2 md:mb-3 italic">1,200+</p>
-              <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest">Board-Certified Specialists</p>
-            </div>
-            <div className="p-8 md:p-10 bg-white/5 border border-white/5 rounded-3xl md:rounded-[2.5rem] text-center">
-              <p className="text-4xl md:text-6xl font-display font-black text-white mb-2 md:mb-3 italic">24/7</p>
-              <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest">Critical Triage Availability</p>
-            </div>
+
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 space-y-1.5">
+            <h5 className="text-xs sm:text-sm font-extrabold text-slate-900">2. Account Responsibility & Integrity</h5>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              You agree to provide accurate biometric and health information. You are responsible for safeguarding your login credentials and preventing unauthorized access to your health passport.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 space-y-1.5">
+            <h5 className="text-xs sm:text-sm font-extrabold text-slate-900">3. Physician Professional Discretion</h5>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Practitioners on MedConnect retain independent clinical discretion regarding treatments, prescriptions, and referrals based on verified telemedicine standards.
+            </p>
           </div>
         </div>
       </div>
     )
   },
-  'patient-portal': {
-    title: "Patient Portal",
-    subtitle: "The Command Center for Personal Health",
-    icon: Activity,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Portal Interface</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            The MedConnect Patient Portal is a revolutionary unified health dashboard. It serves as your personal command center, aggregating every medical data point—from real-time biometric streams to historical lab results—into a single, high-fidelity HUD.
-          </p>
-        </section>
-        
-        <div className="relative group rounded-3xl md:rounded-[3.5rem] overflow-hidden border border-white/20 shadow-2xl bg-black">
-          <motion.img 
-            whileHover={{ scale: 1.05 }}
-            src="https://picsum.photos/seed/med-dashboard-v3/1600/1200" 
-            alt="Patient Portal Prototype" 
-            className="w-full aspect-video md:aspect-[4/3] object-cover opacity-80 group-hover:opacity-100 transition-all duration-700"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent flex items-end p-6 md:p-12">
-            <div className="space-y-3 md:space-y-6">
-              <div className="inline-flex items-center space-x-2 bg-primary-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl">
-                <Sparkles className="w-3 h-3 md:w-5 md:h-5 mr-1" />
-                <span>Next-Gen Prototype</span>
-              </div>
-              <h4 className="text-white font-black text-xl md:text-4xl uppercase italic tracking-tighter leading-none">The Future of <br /> Health Ownership.</h4>
-            </div>
+
+  'privacy': {
+    title: "Privacy Directive",
+    subtitle: "Zero advertising tracking, clinical data sovereignty, and strict confidential silos",
+    tag: "Data Privacy & HIPAA",
+    icon: Lock,
+    renderContent: () => (
+      <div className="space-y-5 sm:space-y-6 text-left font-manrope">
+        {/* Core Privacy Promise */}
+        <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-emerald-50/70 border border-emerald-100 space-y-2">
+          <div className="flex items-center gap-2 text-emerald-700">
+            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            <h4 className="text-sm sm:text-base font-extrabold tracking-tight">Zero Commercial Data Monetization</h4>
           </div>
+          <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
+            MedConnect will never sell, rent, or trade your medical vitals, consultation records, or personal data to advertisers, insurance brokers, or external data brokers.
+          </p>
         </div>
 
-        <section className="space-y-6">
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            The interface features a specialized 'Medical Action Bar' for instant access to AI consultations. The central telemetry view provides a vertical snapshot of your clinical state, including vitals synced directly from your worn medical devices.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-             {[
-               { label: "Biometric Sync", value: "Real-time 1ms", desc: "Proprietary zero-lag lattice sync" },
-               { label: "Encrypted Hub", value: "AES-256 Bit", desc: "Military grade patient data vault" },
-               { label: "Lab Triage", value: "AI Diagnosis", desc: "Instant automated results analysis" }
-             ].map((stat, i) => (
-               <div key={i} className="p-6 md:p-8 bg-white/5 border border-white/5 rounded-2xl md:rounded-3xl">
-                  <p className="text-[9px] font-black text-primary-500 uppercase tracking-widest mb-3 md:mb-4">{stat.label}</p>
-                  <p className="text-lg md:text-xl font-bold text-white uppercase tracking-tight mb-1 md:mb-2">{stat.value}</p>
-                  <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">{stat.desc}</p>
-               </div>
-             ))}
+        {/* Privacy Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <p className="text-xs font-extrabold text-slate-900">Isolated Silos</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">Your data resides in partitioned HIPAA-compliant vaults with hardware keys.</p>
           </div>
-        </section>
-
-        <section className="p-6 md:p-10 bg-slate-800/50 border border-white/10 rounded-3xl md:rounded-[2.5rem] space-y-3 md:space-y-4">
-          <h5 className="text-white font-black uppercase text-[10px] tracking-widest">Ownership & Portability</h5>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            MedConnect believes in radical data portability. Every record found within this portal can be instantly exported as an ISO-validated clinical file for use at any hospital worldwide.
-          </p>
-        </section>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <p className="text-xs font-extrabold text-slate-900">Right to Erasure</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">Request complete data purge at any time under GDPR & CCPA directives.</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
+            <p className="text-xs font-extrabold text-slate-900">Audit Trails</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">Every record access by a doctor is logged and visible in your patient log.</p>
+          </div>
+        </div>
       </div>
     )
   },
-  'safety-protocols': {
-    title: "Safety Protocols",
-    subtitle: "A Zero-Trust Clinical Safeguard System",
-    icon: Shield,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Safety Governance</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            Patient safety is the non-negotiable baseline of our operations. We implement a multi-layered safety lattice that monitors every clinical interaction within the ecosystem.
-          </p>
-        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+  'ethics': {
+    title: "Clinical AI Ethics",
+    subtitle: "Algorithmic neutrality, transparency, and patient empowerment",
+    tag: "Data Ethics & AI Transparency",
+    icon: Info,
+    renderContent: () => (
+      <div className="space-y-5 sm:space-y-6 text-left font-manrope">
+        <div className="p-5 rounded-2xl bg-sky-50/70 border border-sky-100 space-y-2">
+          <h4 className="text-sm sm:text-base font-extrabold text-slate-900">The Techno-Hippocratic Oath</h4>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+            We believe technology must amplify medical empathy, eliminate geographic barriers to care, and never replace the core human relationship between patient and doctor.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+            <p className="text-xs font-extrabold text-slate-900">Bias Stress Testing</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Monthly audits on triage algorithms ensure diagnostic neutrality across all demographics.</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+            <p className="text-xs font-extrabold text-slate-900">Explainable AI</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Patients always receive clear diagnostic trace explanations when AI aids assessment.</p>
+          </div>
+        </div>
+      </div>
+    )
+  },
+
+  'compliance': {
+    title: "Compliance & Accreditations",
+    subtitle: "Continuous synchronization with global healthcare regulations & ISO standards",
+    tag: "Regulatory Standards",
+    icon: Award,
+    renderContent: () => (
+      <div className="space-y-5 sm:space-y-6 text-left font-manrope">
+        {/* Compliance Badges Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-             { title: "Clinical Peer-Oversite", desc: "Every AI-generated diagnostic suggestion is subject to real-time oversight. Suggestions are locked until a board-certified human specialist validates the path." },
-             { title: "Quantum-Hardened Encryption", desc: "AES-256 end-to-end encryption for all sessions. Data pipelines are hardened against state-level interference, keeping your intimacy secure." },
-             { title: "Emergency Triage Routing", desc: "Our engine monitors vital sign feeds. Critical crossings trigger an 'Instant Escalation' protocol, alerting local emergency services with full context." },
-             { title: "Biometric Identity Vault", desc: "Legacy passwords are insufficient. We require multi-layered biometric identity verification, including facial recognition and hardware keys." }
+            { label: "HIPAA Compliant", status: "Verified 2026", desc: "US Health Data Protection" },
+            { label: "ISO 27001", status: "Certified", desc: "Information Security Standard" },
+            { label: "UK-GDPR", status: "Audited", desc: "Strict Privacy Compliance" },
+            { label: "NHS-DTAC", status: "Standard", desc: "Digital Health Tech Criteria" }
           ].map((item, i) => (
-            <div key={i} className="p-6 md:p-8 bg-white/5 rounded-3xl md:rounded-[2.5rem] border border-white/5 hover:border-primary-500/30 hover:bg-white/10 transition-all">
-              <h4 className="text-[10px] md:text-sm font-black text-white uppercase tracking-widest mb-3 md:mb-4 flex items-center">
-                <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-primary-500 mr-2 md:mr-3" />
-                {item.title}
-              </h4>
-              <p className="text-xs text-slate-400 leading-relaxed font-medium">{item.desc}</p>
+            <div key={i} className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+              <Award className="w-5 h-5 text-sky-500 mb-2" />
+              <div>
+                <p className="text-xs font-extrabold text-slate-900 leading-tight">{item.label}</p>
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{item.desc}</p>
+                <div className="flex items-center gap-1.5 mt-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">{item.status}</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
-        <section className="p-6 md:p-10 bg-primary-600/5 rounded-3xl md:rounded-[2.5rem] border border-primary-500/20">
-          <p className="text-[10px] md:text-xs text-slate-400 leading-relaxed text-center italic">
-            "Institutional safety is not a feature; it is the environment in which MedConnect exists." — MedConnect Safety Division.
-          </p>
-        </section>
-      </div>
-    )
-  },
-  'terms': {
-    title: "Terms of Use",
-    subtitle: "Institutional Clinical Agreement v4.2",
-    icon: FileText,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Legal Terms</h3>
-          <div className="p-6 md:p-10 bg-white/5 rounded-3xl md:rounded-[2.5rem] border border-white/10">
-            <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest mb-4">Executive Summary</p>
-            <p className="text-base md:text-lg font-medium lg:leading-relaxed text-slate-300">By engaging with MedConnect, you enter a legally binding institutional service agreement. This specifies clinical responsibilities and data integrity obligations. Read these terms in full to understand our scope of digital medical care.</p>
-          </div>
-        </section>
-        
-        <div className="space-y-8 md:space-y-12">
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tight">1. Access Protocols</h4>
-            <p className="text-xs sm:text-sm">Access is restricted to validated account holders. You agree to provide accurate clinical data. Misrepresentation or hardware-spoofing results in institutional exclusion.</p>
-          </section>
-          
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tight">2. Scope of Service</h4>
-            <p className="text-xs sm:text-sm">MedConnect provides diagnostic augmentation and peer connections. We do not replace local emergency services. In acute emergencies, move to physical medical intervention immediately.</p>
-          </section>
-
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tight">3. Data Ownership</h4>
-            <p className="text-xs sm:text-sm">Users retain ownership of medical data but grant MedConnect a processing license. Users agree not to reverse-engineer diagnostic algorithms or commit insurance fraud.</p>
-          </section>
-
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-lg md:text-xl font-black text-white uppercase italic tracking-tight">4. Liability</h4>
-            <p className="text-xs sm:text-sm">Ultimate clinical responsibility rests with the human specialist. Liability is limited to data pipeline functionality and specialist vetting. Telehealth risks are acknowledged by usage.</p>
-          </section>
-        </div>
-      </div>
-    )
-  },
-  'privacy': {
-    title: "Privacy Policy",
-    subtitle: "Global Patient Data Directive",
-    icon: Lock,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Privacy Directive</h3>
-          <div className="p-6 md:p-10 bg-primary-600/10 rounded-3xl md:rounded-[2.5rem] border border-primary-500/20">
-            <p className="text-[10px] font-black text-primary-500 uppercase tracking-widest mb-4">Patient-Center Privacy Model</p>
-            <p className="text-lg md:text-xl font-bold text-white leading-tight">MedConnect operates under a 'Data Courier' philosophy. We do not own your health story; we provide the high-security infrastructure to tell it.</p>
-          </div>
-        </section>
-
-        <div className="grid grid-cols-1 gap-8 md:gap-12">
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-base md:text-lg font-black text-white uppercase tracking-widest">A. Data Collection</h4>
-            <p className="text-xs sm:text-sm">We collect clinical history and real-time biometric vitals solely to facilitate diagnosis. We do not track cross-site behavior or build advertising profiles. Data remains in a clinical silo.</p>
-          </section>
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-base md:text-lg font-black text-white uppercase tracking-widest">B. Firewall Protocols</h4>
-            <p className="text-xs sm:text-sm">Strict 'No-Share' firewall. Data is not sold or rented to insurers or marketers. Research data is fully anonymized and sharded, preventing re-identification.</p>
-          </section>
-          <section className="space-y-3 md:space-y-4">
-            <h4 className="text-base md:text-lg font-black text-white uppercase tracking-widest">C. Right to Erasure</h4>
-            <p className="text-xs sm:text-sm">Compliance with UK-GDPR standards allows a full lattice-purge of your record. Encrypted backups may exist for statutory periods before permanent destruction.</p>
-          </section>
-        </div>
-      </div>
-    )
-  },
-  'ethics': {
-    title: "Data Ethics",
-    subtitle: "The Techno-Hippocratic Alignment",
-    icon: Info,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Usage Ethics</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            MedConnect operates under a framework of Data Ethics. We believe technology should amplify medical care, never replace the human clinical touch or biological agency.
-          </p>
-        </section>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <div className="p-6 md:p-10 bg-white/5 rounded-3xl md:rounded-[3rem] border border-white/5 hover:bg-white/10 transition-all space-y-4 md:space-y-6">
-            <h4 className="text-[10px] md:text-xs font-black text-primary-400 uppercase tracking-widest mb-3 md:mb-6">Algorithmic Neutrality</h4>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">We perform monthly 'Bias Stress Checks' on our AI triage modules. This ensures absolute neutrality across all demographic and geographic vectors.</p>
-          </div>
-          <div className="p-6 md:p-10 bg-white/5 rounded-3xl md:rounded-[3rem] border border-white/5 hover:bg-white/10 transition-all space-y-4 md:space-y-6">
-            <h4 className="text-[10px] md:text-xs font-black text-primary-400 uppercase tracking-widest mb-3 md:mb-6">Radical Transparency</h4>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">Every patient is notified via their HUD when synthetic intelligence is contributing to a diagnosis. We provide a full 'Diagnostic Trace'.</p>
-          </div>
-        </div>
-
-        <section className="space-y-6 text-center max-w-xl mx-auto">
-          <p className="text-[10px] md:text-sm text-slate-500 italic">"Technology without morality is a clinical failure." — The MedConnect Ethics Committee.</p>
-        </section>
-      </div>
-    )
-  },
-  'compliance': {
-    title: "Compliance Core",
-    subtitle: "International Regulatory Synchronization",
-    icon: Award,
-    content: (zoom) => (
-      <div className="space-y-8 md:space-y-12" style={{ fontSize: `${zoom * 100}%` }}>
-        <section className="space-y-4 md:space-y-6">
-          <h3 className="text-xl md:text-2xl font-display font-black text-white uppercase italic tracking-tighter">Our Compliances</h3>
-          <p className="text-slate-300 text-base sm:text-lg md:text-xl font-medium leading-relaxed">
-            MedConnect maintains continuous synchronicity with global medical regulations. Compliance is a live biometric of our clinical health.
-          </p>
-        </section>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-           {[
-             { label: "UK-GDPR", status: "Verified", cert: "Data Protection", desc: "Absolute compliance with the most stringent protection laws." },
-             { label: "NHS-DTAC", status: "Compliant", cert: "Triage Standards", desc: "Meets clinical safety standards for integrated digital tools." },
-             { label: "ISO-27001", status: "Standard", cert: "Ops Security", desc: "Gold-standard certification for information security management." },
-             { label: "Cyber Ess.", status: "Plus", cert: "Hardening", desc: "Validated protection against complex cyber-territorian attacks." }
-           ].map((cert, i) => (
-             <div key={i} className="p-4 md:p-8 bg-white/5 rounded-3xl md:rounded-[2.5rem] border border-white/5 flex flex-col justify-between aspect-square group hover:bg-primary-600/5 hover:border-primary-500/20 transition-all">
-               <Award className="w-5 h-5 md:w-8 md:h-8 text-primary-500 mb-2 md:mb-4 group-hover:scale-110 transition-transform" />
-               <div>
-                  <p className="text-white font-black uppercase text-xs sm:text-sm md:text-base tracking-tighter mb-1 leading-none">{cert.label}</p>
-                  <p className="text-[7px] md:text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 md:mb-4 leading-none">{cert.cert}</p>
-                  <div className="hidden sm:block mb-4">
-                    <p className="text-[8px] text-slate-400 font-medium leading-relaxed">{cert.desc}</p>
-                  </div>
-                  <div className="flex items-center space-x-1 md:space-x-2">
-                    <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <p className="text-[7px] md:text-[8px] font-mono text-green-500 uppercase tracking-widest">{cert.status}</p>
-                  </div>
-               </div>
-             </div>
-           ))}
+        <div className="p-4 rounded-2xl bg-white border border-slate-200/80 text-xs text-slate-600 leading-relaxed">
+          MedConnect conducts quarterly independent security penetration testing and clinical governance audits to ensure uninterrupted adherence to international medical standards.
         </div>
       </div>
     )
@@ -342,71 +427,71 @@ export default function FooterInfoPanel({ type, onClose }: InfoPanelProps) {
   return (
     <AnimatePresence>
       {type && data && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center md:justify-end p-0 md:p-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3.5 sm:p-6 md:p-8 font-manrope">
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-md"
             aria-hidden="true"
           />
-          
+
+          {/* Modal Container */}
           <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: "spring", damping: 35, stiffness: 250 }}
-            className="relative w-full max-w-4xl h-full bg-slate-900 border-l border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden rounded-none sm:rounded-l-[3rem] md:rounded-l-[4rem]"
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            className="relative w-full max-w-2xl max-h-[88vh] bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-sky-100 shadow-[0_25px_70px_rgba(14,165,233,0.18)] flex flex-col overflow-hidden text-slate-900 z-10"
           >
-            {/* Header */}
-            <div className="p-6 sm:p-12 md:p-16 pb-8 pt-10 md:pt-16 flex justify-between items-start relative">
-              <div className="max-w-[70%] sm:max-w-xl">
-                <motion.div 
-                   initial={{ scale: 0.8, opacity: 0 }}
-                   animate={{ scale: 1, opacity: 1 }}
-                   className="w-12 h-12 md:w-20 md:h-20 bg-primary-600/20 rounded-2xl md:rounded-[1.5rem] flex items-center justify-center mb-6 md:mb-10 border border-primary-500/20 shadow-2xl shadow-primary-600/10"
-                >
-                  <data.icon className="w-6 h-6 md:w-10 md:h-10 text-primary-500" />
-                </motion.div>
-                <p className="text-[9px] md:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.5em] mb-3 md:mb-4">{data.subtitle}</p>
-                <h2 className="text-3xl sm:text-5xl md:text-7xl font-display font-black text-white uppercase italic tracking-tighter leading-[0.9] md:leading-tight">
-                  {data.title.split(' ').map((word, idx) => (
-                    <span key={idx} className={idx % 2 === 1 ? 'text-primary-600 not-italic' : ''}>
-                      {word}{' '}
-                    </span>
-                  ))}
-                </h2>
+            {/* Top Ambient Glow */}
+            <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-sky-400/15 via-sky-300/5 to-transparent rounded-full blur-2xl pointer-events-none" />
+
+            {/* Modal Header */}
+            <div className="p-5 sm:p-7 sm:pb-5 border-b border-slate-100 flex items-start justify-between relative z-10 bg-white/90 backdrop-blur-md">
+              <div className="max-w-[80%] text-left">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-sky-100 bg-sky-50 text-sky-600 text-[11px] font-semibold mb-2">
+                  <data.icon className="w-3.5 h-3.5 text-sky-500" />
+                  <span>{data.tag}</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  {data.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1 leading-snug">
+                  {data.subtitle}
+                </p>
               </div>
-              <button 
+
+              <button
                 onClick={onClose}
-                className="w-10 h-10 md:w-16 md:h-16 bg-white/5 rounded-full flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all group border border-white/5 shadow-xl shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer shrink-0 active:scale-95"
+                title="Close"
+                aria-label="Close"
               >
-                <X className="w-5 h-5 md:w-8 md:h-8 transition-transform group-hover:rotate-90" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-12 md:p-16 pt-0 custom-scrollbar scroll-smooth">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className="origin-top"
-              >
-                {data.content(1)}
-              </motion.div>
+            {/* Scrollable Content Body */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-7 relative z-10 custom-scrollbar">
+              {data.renderContent()}
             </div>
 
-            {/* Footer */}
-            <div className="p-6 sm:p-12 md:p-16 pt-8 pb-12 md:pb-16 border-t border-white/5 bg-slate-900/90 backdrop-blur-2xl pb-safe">
-               <button 
-                 onClick={onClose}
-                 className="w-full h-16 md:h-20 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl md:rounded-[2rem] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xs flex items-center justify-center group shadow-2xl transition-all active:scale-95"
-               >
-                 <span>Acknowledge Gateway</span>
-                 <ChevronRight className="w-5 h-5 ml-3 transition-transform group-hover:translate-x-2" />
-               </button>
+            {/* Modal Footer Bar */}
+            <div className="p-4 sm:p-6 border-t border-slate-100 bg-slate-50/80 backdrop-blur-md relative z-10 flex items-center justify-between gap-3">
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                <span>Verified MedConnect Protocol</span>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="w-full sm:w-auto py-2.5 sm:py-3 px-6 rounded-full bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs sm:text-sm transition-all shadow-xs cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 ml-auto"
+              >
+                <span>Understood & Close</span>
+              </button>
             </div>
           </motion.div>
         </div>
