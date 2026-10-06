@@ -125,8 +125,8 @@ export function FeaturesSection({ onNavigate, onAuthOpen, onPatientProfileOpen }
           </p>
         </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Feature Cards Grid - 3 spacious columns on desktop with generous gap */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-8 xl:gap-10">
           {FEATURES.map((feature, index) => (
             <motion.div
               key={feature.id}
@@ -135,14 +135,14 @@ export function FeaturesSection({ onNavigate, onAuthOpen, onPatientProfileOpen }
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.5, delay: index * 0.08 }}
               whileHover={{ y: -4 }}
-              className="group bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2rem] p-7 border border-slate-100 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-800 shadow-[0_20px_50px_rgba(14,165,233,0.06)] hover:shadow-[0_25px_60px_rgba(14,165,233,0.12)] transition-all flex flex-col justify-between text-left relative overflow-hidden"
+              className="group bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-[2rem] sm:rounded-[2.25rem] p-6 sm:p-8 border border-slate-100 dark:border-slate-800 hover:border-sky-200 dark:hover:border-sky-800 shadow-[0_20px_50px_rgba(14,165,233,0.06)] hover:shadow-[0_25px_60px_rgba(14,165,233,0.12)] transition-all flex flex-col justify-between text-left relative overflow-hidden"
             >
               <div>
-                <div className="w-13 h-13 rounded-2xl bg-sky-50 dark:bg-slate-800 border border-sky-100 dark:border-slate-700 flex items-center justify-center mb-6 text-sky-500 group-hover:scale-105 transition-transform shadow-sm">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-sky-50 dark:bg-slate-800 border border-sky-100 dark:border-slate-700 flex items-center justify-center mb-6 text-sky-500 group-hover:scale-105 transition-transform shadow-2xs">
                   <feature.icon className="w-6 h-6 text-sky-500" />
                 </div>
                 
-                <h3 className="text-lg font-extrabold tracking-tight mb-2.5 text-slate-900 dark:text-white leading-tight">
+                <h3 className="text-lg sm:text-xl font-extrabold tracking-tight mb-2.5 text-slate-900 dark:text-white leading-tight">
                   {feature.title}
                 </h3>
                 
@@ -154,7 +154,7 @@ export function FeaturesSection({ onNavigate, onAuthOpen, onPatientProfileOpen }
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   onClick={() => handleFeatureClick(feature.view, feature.id)}
-                  className="w-full py-2.5 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300"
+                  className="w-full py-3 px-4 rounded-full text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300 active:scale-[0.98]"
                 >
                   {!user && feature.id !== 'emergency' ? (
                     <>

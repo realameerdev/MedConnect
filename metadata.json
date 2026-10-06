@@ -2,5 +2,5 @@
   "name": "MedConnect",
   "description": "A modern digital clinic enabling users to connect with licensed doctors, receive medical guidance, and book consultations.",
   "requestFramePermissions": ["geolocation", "accelerometer", "gyroscope", "camera", "microphone"],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

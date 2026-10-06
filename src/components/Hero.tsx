@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Phone, ChevronLeft, MoreVertical, Heart, Activity, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HeroProps {
   onNavigate: (page: string) => void;
@@ -20,8 +21,17 @@ interface OrganInfo {
 
 export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [selectedOrgan, setSelectedOrgan] = useState<OrganKey>('heart');
   const [showOrganModal, setShowOrganModal] = useState(false);
+
+  const handleDashboardClick = () => {
+    if (user) {
+      onNavigate('dashboard');
+    } else {
+      onAuthOpen('signup');
+    }
+  };
 
   const organs: Record<OrganKey, OrganInfo> = {
     heart: {
@@ -146,7 +156,7 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => onAuthOpen('signup')}
+            onClick={handleDashboardClick}
             className="w-full sm:w-auto bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm sm:text-base px-8 py-3.5 rounded-full shadow-[0_12px_28px_rgba(14,165,233,0.45)] flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <span>Enter Dashboard</span>
@@ -170,22 +180,22 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
           Left Floating Vitals Card + Center Smartphone + Right Floating Emergency Card
           =======================================================
         */}
-        <div className="relative mt-12 sm:mt-16 md:mt-20 flex items-end justify-center w-full max-w-6xl mx-auto min-h-[500px] md:min-h-[580px] lg:min-h-[640px]">
+        <div className="relative mt-12 sm:mt-16 md:mt-20 lg:mt-24 flex items-end justify-center w-full max-w-7xl mx-auto min-h-[500px] md:min-h-[580px] lg:min-h-[660px] px-2 sm:px-4">
           
           {/* LEFT FLOATING GLASS CARD: Vitals (Heart Rate + Sleep) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="hidden md:flex absolute left-0 lg:left-4 bottom-28 lg:bottom-36 z-20 backdrop-blur-2xl bg-white/80 dark:bg-slate-900/80 border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(14,165,233,0.14)] rounded-[2rem] p-5 lg:p-6 items-center gap-6 text-left"
+            className="hidden md:flex absolute left-2 lg:left-6 xl:left-10 bottom-24 lg:bottom-32 xl:bottom-36 z-20 backdrop-blur-2xl bg-white/85 dark:bg-slate-900/85 border border-white/95 dark:border-slate-800 shadow-[0_20px_50px_rgba(14,165,233,0.12)] rounded-[2rem] p-4.5 lg:p-6 items-center gap-5 lg:gap-6 text-left"
           >
             {/* Metric 1: Heart Rate */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3.5 lg:gap-4">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Heart Rate</p>
+                <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-slate-400">Heart Rate</p>
                 <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white">72</span>
-                  <span className="text-[11px] font-bold text-slate-400 uppercase">BMP</span>
+                  <span className="text-xl lg:text-3xl font-extrabold text-slate-900 dark:text-white">72</span>
+                  <span className="text-[10px] lg:text-[11px] font-bold text-slate-400 uppercase">BMP</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] text-slate-400 font-medium">Goal: 60-100 BMP</span>
@@ -194,7 +204,7 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
               </div>
 
               {/* 3D Anatomical Heart Vector */}
-              <div className="w-12 h-12 lg:w-14 lg:h-14 shrink-0 flex items-center justify-center">
+              <div className="w-11 h-11 lg:w-14 lg:h-14 shrink-0 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
                   <defs>
                     <linearGradient id="heartAorta" x1="0" y1="0" x2="1" y2="1">
@@ -220,14 +230,14 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
             </div>
 
             {/* Vertical Divider */}
-            <div className="w-px h-14 bg-slate-200/80 dark:bg-slate-700/80" />
+            <div className="w-px h-12 lg:h-14 bg-slate-200/80 dark:bg-slate-700/80" />
 
             {/* Metric 2: Sleep */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3.5 lg:gap-4">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Sleep</p>
+                <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-wider text-slate-400">Sleep</p>
                 <div className="flex items-baseline gap-1 mt-0.5">
-                  <span className="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white">7h 45m</span>
+                  <span className="text-xl lg:text-3xl font-extrabold text-slate-900 dark:text-white">7h 45m</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] text-slate-400 font-medium">Goal: 7-9 hrs</span>
@@ -236,7 +246,7 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
               </div>
 
               {/* 3D Sleeping Character Illustration */}
-              <div className="w-12 h-12 lg:w-14 lg:h-14 shrink-0 flex items-center justify-center">
+              <div className="w-11 h-11 lg:w-14 lg:h-14 shrink-0 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
                   <defs>
                     <linearGradient id="sleepCap" x1="0" y1="0" x2="1" y2="1">
@@ -274,12 +284,12 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="hidden md:flex absolute right-0 lg:right-4 bottom-36 lg:bottom-48 z-20 backdrop-blur-2xl bg-white/80 dark:bg-slate-900/80 border border-white/90 dark:border-slate-800 shadow-[0_20px_50px_rgba(14,165,233,0.14)] rounded-full py-3.5 px-5 lg:py-4 lg:px-6 items-center gap-4 text-left"
+            className="hidden md:flex absolute right-2 lg:right-6 xl:right-10 bottom-32 lg:bottom-44 xl:bottom-48 z-20 backdrop-blur-2xl bg-white/85 dark:bg-slate-900/85 border border-white/95 dark:border-slate-800 shadow-[0_20px_50px_rgba(14,165,233,0.12)] rounded-full py-3 px-4.5 lg:py-4 lg:px-6 items-center gap-3.5 lg:gap-4 text-left"
           >
             {/* Cute 3D AI Robot Doctor Avatar */}
-            <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-sky-400 via-sky-500 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-tr from-sky-400 via-sky-500 to-indigo-600 p-0.5 shadow-md flex items-center justify-center shrink-0">
               <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                <svg viewBox="0 0 100 100" className="w-8 h-8">
+                <svg viewBox="0 0 100 100" className="w-7 h-7 lg:w-8 lg:h-8">
                   {/* Robot Head */}
                   <rect x="22" y="24" width="56" height="48" rx="20" fill="#e0f2fe" stroke="#0ea5e9" strokeWidth="3" />
                   {/* Visor Screen */}
@@ -298,8 +308,8 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
 
             {/* Text details */}
             <div className="pr-1">
-              <h4 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white leading-tight">Emergency Call</h4>
-              <p className="text-[11px] lg:text-xs text-slate-400 mt-0.5">Call now for urgent medical help</p>
+              <h4 className="text-xs lg:text-base font-bold text-slate-900 dark:text-white leading-tight">Emergency Call</h4>
+              <p className="text-[10px] lg:text-xs text-slate-400 mt-0.5">Call now for urgent medical help</p>
             </div>
 
             {/* Call Action Button */}
@@ -307,10 +317,10 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.92 }}
               onClick={() => onNavigate('emergency')}
-              className="w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-all shrink-0 ml-1"
+              className="w-9 h-9 lg:w-11 lg:h-11 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center shadow-md cursor-pointer transition-all shrink-0 ml-1"
               aria-label="Call Emergency Services"
             >
-              <Phone className="w-4 h-4 fill-white" />
+              <Phone className="w-3.5 h-3.5 lg:w-4 lg:h-4 fill-white" />
             </motion.button>
           </motion.div>
 
@@ -322,7 +332,7 @@ export function Hero({ onNavigate, onAuthOpen }: HeroProps) {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.2, type: "spring", damping: 20 }}
-            className="relative z-10 w-[270px] xs:w-[300px] sm:w-[340px] md:w-[370px] lg:w-[410px] mx-auto select-none"
+            className="relative z-10 w-[260px] xs:w-[290px] sm:w-[320px] md:w-[340px] lg:w-[370px] xl:w-[390px] mx-auto select-none"
           >
             {/* Realistic Hands holding phone from below and edges - hidden on ultra-compact <340px screens to prevent overlap */}
             <div className="hidden xs:block absolute inset-0 -bottom-16 pointer-events-none z-30">

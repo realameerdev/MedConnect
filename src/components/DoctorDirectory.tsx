@@ -3,7 +3,7 @@ import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { ChevronDown, Clock, Video, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { ChevronDown, Clock, Video, Calendar as CalendarIcon, Activity, Stethoscope, Search, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export interface Doctor {
@@ -52,6 +52,7 @@ const INITIAL_DOCTORS: Doctor[] = [
 
 export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: Doctor, action: 'chat' | 'book') => void }) {
   const { t } = useLanguage();
+  const { user, userRole } = useAuth();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,16 +70,12 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
     return matchesSearch && matchesSpecialty && matchesAvailability;
   });
 
-  const { user, userRole } = useAuth();
-
   useEffect(() => {
     async function fetchDoctors() {
       try {
         const querySnapshot = await getDocs(collection(db, 'doctors'));
         if (querySnapshot.empty) {
           setDoctors(INITIAL_DOCTORS);
-          // Only attempt to seed if the current user is an admin 
-          // to avoid "Missing or insufficient permissions" errors in the console
           if (user && userRole === 'admin') {
             for (const docData of INITIAL_DOCTORS) {
               setDoc(doc(db, 'doctors', docData.uid), docData).catch(() => {});
@@ -96,66 +93,69 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
       }
     }
     fetchDoctors();
-  }, []);
+  }, [user, userRole]);
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center h-96 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex flex-col justify-center items-center h-96 space-y-4 font-manrope">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
         <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('loading')}</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center space-x-2 bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-slate-200">
-            <span>{t('doc_verified')}</span>
-          </div>
-          <h2 className="text-5xl font-black font-display text-slate-900 tracking-tighter uppercase leading-[0.8] mb-6">
-            {t('doc_meet')} <br />
-            <span className="text-primary-600">{t('doc_specialists')}</span>
-          </h2>
-          <p className="text-lg text-slate-500 font-medium leading-relaxed">
-            {t('doc_desc')}
-          </p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 font-manrope">
+      
+      {/* Header Banner matching landing page style */}
+      <div className="bg-white dark:bg-slate-900 p-6 sm:p-10 lg:p-12 rounded-[2.5rem] border border-sky-100 dark:border-slate-800 shadow-[0_20px_50px_rgba(8,112,184,0.06)] relative overflow-hidden mb-12">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-sky-400/15 to-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="flex items-center space-x-4 bg-white p-2 border border-slate-100 rounded-2xl shadow-sm">
-          <div className="px-4 py-2 bg-slate-50 rounded-xl text-center">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('doc_available')}</p>
-            <p className="text-lg font-black text-slate-900">{doctors.filter(d => d.availability === 'available').length}</p>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 text-xs font-extrabold mb-4 uppercase tracking-wider">
+              <Stethoscope className="w-4 h-4" /> {t('doc_verified')}
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-4">
+              {t('doc_meet')} <span className="text-sky-500">{t('doc_specialists')}</span>
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+              {t('doc_desc')}
+            </p>
           </div>
-          <div className="px-4 py-2 bg-slate-50 rounded-xl text-center">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('doc_total')}</p>
-            <p className="text-lg font-black text-slate-900">{doctors.length}</p>
+          
+          <div className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl border border-sky-100 dark:border-slate-700 shrink-0 shadow-xs">
+            <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl text-center shadow-2xs">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('doc_available')}</p>
+              <p className="text-xl font-extrabold text-emerald-600">{doctors.filter(d => d.availability === 'available').length}</p>
+            </div>
+            <div className="px-4 py-2 bg-white dark:bg-slate-900 rounded-xl text-center shadow-2xs">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('doc_total')}</p>
+              <p className="text-xl font-extrabold text-slate-900 dark:text-white">{doctors.length}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mb-12 flex flex-col lg:flex-row gap-4 md:gap-6">
-        <div className="relative flex-1 group">
+      {/* Search & Filter Bar */}
+      <div className="mb-10 flex flex-col lg:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input
             type="text"
             placeholder={t('doc_search_ph')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-slate-100 rounded-[1.5rem] md:rounded-[2rem] px-6 md:px-8 py-4 md:py-5 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-primary-500 transition-all font-bold uppercase text-[9px] md:text-[10px] tracking-widest shadow-lg shadow-slate-900/5 group-hover:border-slate-200"
+            className="w-full bg-white dark:bg-slate-900 border border-sky-100 dark:border-slate-800 rounded-2xl py-4 pl-14 pr-6 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-sky-500 transition-all font-bold text-xs sm:text-sm shadow-xs"
           />
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center space-x-2 text-slate-300 hidden sm:flex">
-            <span className="text-[10px] font-black uppercase tracking-tighter">{t('doc_quick_search')}</span>
-            <Activity className="w-4 h-4" />
-          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative group flex-1 sm:flex-none">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 sm:flex-none">
             <select
               value={specialtyFilter}
               onChange={(e) => setSpecialtyFilter(e.target.value)}
-              className="appearance-none w-full bg-white border-2 border-slate-100 rounded-xl md:rounded-2xl px-6 py-4 md:py-5 pr-12 text-[10px] font-black uppercase tracking-widest text-slate-900 focus:outline-none focus:border-primary-500 transition-all sm:min-w-[200px] shadow-lg shadow-slate-900/5 cursor-pointer group-hover:border-slate-200"
+              className="appearance-none w-full bg-white dark:bg-slate-900 border border-sky-100 dark:border-slate-800 rounded-2xl py-4 px-5 pr-12 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 transition-all sm:min-w-[180px] shadow-xs cursor-pointer"
             >
               {specialties.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -164,13 +164,13 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
             </div>
           </div>
 
-          <div className="relative group flex-1 sm:flex-none">
+          <div className="relative flex-1 sm:flex-none">
             <select
               value={availabilityFilter}
               onChange={(e) => setAvailabilityFilter(e.target.value)}
-              className="appearance-none w-full bg-white border-2 border-slate-100 rounded-xl md:rounded-2xl px-6 py-4 md:py-5 pr-12 text-[10px] font-black uppercase tracking-widest text-slate-900 focus:outline-none focus:border-primary-500 transition-all sm:min-w-[200px] shadow-lg shadow-slate-900/5 cursor-pointer group-hover:border-slate-200"
+              className="appearance-none w-full bg-white dark:bg-slate-900 border border-sky-100 dark:border-slate-800 rounded-2xl py-4 px-5 pr-12 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 transition-all sm:min-w-[180px] shadow-xs cursor-pointer"
             >
-              {availabilityOptions.map(o => <option key={o} value={o}>{o === 'All' ? t('nav_regional_hub') : o}</option>)}
+              {availabilityOptions.map(o => <option key={o} value={o}>{o === 'All' ? 'All Status' : o}</option>)}
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                <Clock className="w-4 h-4" />
@@ -179,41 +179,40 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
         </div>
       </div>
 
+      {/* Doctor Cards Grid */}
       {filteredDoctors.length === 0 ? (
-        <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-100">
-          <Activity className="w-12 h-12 text-slate-200 mx-auto mb-4 animate-pulse" />
-          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">{t('doc_not_found')}</h3>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{t('doc_not_found_desc')}</p>
+        <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-sky-100 dark:border-slate-800 p-6">
+          <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3 animate-pulse" />
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">{t('doc_not_found')}</h3>
+          <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">{t('doc_not_found_desc')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredDoctors.map((doctor, index) => (
-          <motion.div 
-            key={doctor.uid} 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              damping: 20,
-              stiffness: 100,
-              delay: index * 0.05
-            }}
-            className="group relative"
-          >
-            <div className="absolute inset-0 bg-primary-600 rounded-[2.5rem] translate-y-2 opacity-0 group-hover:opacity-10 transition-all duration-500 blur-2xl" />
-            <div className="relative bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl shadow-slate-900/5 group">
-              <div className="p-8">
-                <div className="relative mb-8 flex justify-center">
+            <motion.div 
+              key={doctor.uid} 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                type: "spring",
+                damping: 25,
+                stiffness: 120,
+                delay: index * 0.05
+              }}
+              className="bg-white dark:bg-slate-900 rounded-[2.25rem] border border-sky-100 dark:border-slate-800 overflow-hidden shadow-[0_15px_40px_rgba(8,112,184,0.06)] hover:shadow-[0_20px_50px_rgba(8,112,184,0.12)] transition-all flex flex-col justify-between"
+            >
+              <div className="p-6">
+                <div className="relative mb-6 flex justify-center">
                   <div className="relative">
                     <img 
                       src={doctor.imageUrl} 
                       alt={doctor.name} 
-                      className="w-32 h-32 rounded-3xl object-cover grayscale group-hover:grayscale-0 transition-all duration-500 border-4 border-slate-50 shadow-inner"
+                      className="w-28 h-28 rounded-2xl object-cover border-2 border-sky-100 dark:border-slate-700 shadow-sm"
                       referrerPolicy="no-referrer"
                     />
-                    <div className={`absolute -bottom-2 -right-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg ${
-                      doctor.availability === 'available' ? 'bg-green-500 text-white' :
-                      doctor.availability === 'busy' ? 'bg-orange-500 text-white' :
+                    <div className={`absolute -bottom-2 -right-2 px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-wider shadow-sm ${
+                      doctor.availability === 'available' ? 'bg-emerald-500 text-white' :
+                      doctor.availability === 'busy' ? 'bg-amber-500 text-white' :
                       'bg-slate-400 text-white'
                     }`}>
                       {doctor.availability}
@@ -221,22 +220,21 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
                   </div>
                 </div>
                 
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-black text-slate-900 mb-1 uppercase tracking-tight">{doctor.name}</h3>
-                  <p className="text-primary-600 font-bold text-[10px] uppercase tracking-[0.15em]">{doctor.specialty}</p>
+                <div className="text-center mb-6">
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">{doctor.name}</h3>
+                  <p className="text-sky-600 dark:text-sky-400 font-bold text-xs uppercase tracking-wider mt-0.5">{doctor.specialty}</p>
                   
-                  <div className="flex items-center justify-center mt-3">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                      Rating: {doctor.rating} / 5.0
-                    </span>
+                  <div className="flex items-center justify-center gap-1 mt-2.5 text-amber-500 text-xs font-bold">
+                    <Star className="w-3.5 h-3.5 fill-amber-500" />
+                    <span className="text-slate-700 dark:text-slate-300">{doctor.rating} / 5.0</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-2.5">
                   <motion.button 
                     whileTap={{ scale: 0.96 }}
                     onClick={() => onSelectDoctor(doctor, 'chat')}
-                    className="flex items-center justify-center py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-slate-900/10"
+                    className="flex items-center justify-center py-3 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-extrabold text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
                   >
                     <Video className="w-4 h-4 mr-2" />
                     {t('doc_consult_now')}
@@ -244,7 +242,7 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
                   <motion.button 
                     whileTap={{ scale: 0.96 }}
                     onClick={() => onSelectDoctor(doctor, 'book')}
-                    className="flex items-center justify-center py-4 px-6 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 font-black text-xs uppercase tracking-widest transition-all border border-slate-200"
+                    className="flex items-center justify-center py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
                   >
                     <CalendarIcon className="w-4 h-4 mr-2" />
                     {t('doc_book_visit')}
@@ -252,22 +250,20 @@ export function DoctorDirectory({ onSelectDoctor }: { onSelectDoctor: (doctor: D
                 </div>
               </div>
               
-              <div className="bg-slate-50 p-4 border-t border-slate-100 flex justify-center space-x-6">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Wait: 5m</span>
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-3 border-t border-slate-100 dark:border-slate-800 flex justify-around text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-sky-500" /> Wait: 5m
                 </div>
-                <div className="h-3 w-px bg-slate-200" />
-                <div className="flex items-center space-x-1">
-                  <Activity className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Online</span>
+                <div className="flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-emerald-500" /> Verified
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
       )}
     </div>
   );
 }
+
+export default DoctorDirectory;

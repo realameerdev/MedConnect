@@ -7,7 +7,9 @@ import {
   signOut,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -32,16 +34,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Ensure session persists securely across browser refreshes and tabs
+    setPersistence(auth, browserLocalPersistence).catch((err) => {
+      console.warn("Auth persistence error:", err);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          setUserRole(userDoc.data().role);
-        } else {
-          setUserRole(null); // Explicitly null to indicate profile needs completion
+        try {
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists() && userDoc.data().role) {
+            setUserRole(userDoc.data().role);
+          } else {
+            // Fallback role so authenticated users are recognized immediately without forced sign-up prompts
+            setUserRole('patient');
+          }
+        } catch (e) {
+          console.error("Error fetching user role:", e);
+          setUserRole('patient');
         }
       } else {
         setUserRole(null);
@@ -77,14 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       createdAt: new Date().toISOString()
     });
+    setUserRole(role);
 
     if (role === 'doctor') {
-      // Also create entry in doctors collection
       const doctorDocRef = doc(db, 'doctors', userCredential.user.uid);
       await setDoc(doctorDocRef, {
         uid: userCredential.user.uid,
         name,
-        specialty: 'General Practice', // Default
+        specialty: 'General Practice',
         availability: 'available',
         rating: 5.0,
         imageUrl: `https://picsum.photos/seed/${userCredential.user.uid}/200/200`
@@ -114,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString()
     };
     
-    await setDoc(userDocRef, data);
+    await setDoc(userDocRef, data, { merge: true });
     setUserRole(role);
 
     if (role === 'doctor') {
@@ -126,12 +139,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         availability: 'available',
         rating: 5.0,
         imageUrl: user.photoURL || `https://picsum.photos/seed/${user.uid}/200/200`
-      });
+      }, { merge: true });
     }
   };
 
   const logout = async () => {
     await signOut(auth);
+    setUser(null);
+    setUserRole(null);
   };
 
   return (

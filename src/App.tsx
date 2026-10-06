@@ -52,11 +52,9 @@ function AppContent() {
     if (!authLoading) {
       if (!user && currentView !== 'home') {
         setCurrentView('home');
-      } else if (user && !userRole) {
-        setAuthModal({ open: true, mode: 'signup' });
       }
     }
-  }, [user, userRole, authLoading, currentView]);
+  }, [user, authLoading, currentView]);
 
   const addNotification = (title: string, message: string, type: Notification['type'] = 'info') => {
     const newNotif: Notification = {
