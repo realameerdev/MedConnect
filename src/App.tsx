@@ -192,7 +192,10 @@ function AppContent() {
             )}
 
             {currentView === 'blog' && (
-              <HealthBlog onBack={() => handleNavigate('home')} />
+              <HealthBlog 
+                onBack={() => handleNavigate('home')} 
+                onNotificationAdd={addNotification}
+              />
             )}
 
             {currentView === 'notifications' && (

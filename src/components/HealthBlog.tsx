@@ -12,7 +12,8 @@ import {
   Activity,
   ArrowLeft,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
@@ -92,7 +93,12 @@ const STATIC_POSTS: BlogPost[] = [
   }
 ];
 
-export function HealthBlog({ onBack }: { onBack: () => void }) {
+interface HealthBlogProps {
+  onBack: () => void;
+  onNotificationAdd?: (title: string, message: string, type?: 'success' | 'info' | 'alert') => void;
+}
+
+export function HealthBlog({ onBack, onNotificationAdd }: HealthBlogProps) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>(STATIC_POSTS);
   const [loading, setLoading] = useState(false);
@@ -105,6 +111,7 @@ export function HealthBlog({ onBack }: { onBack: () => void }) {
   const [subscribing, setSubscribing] = useState(false);
   const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [subscribeMessage, setSubscribeMessage] = useState('');
+  const [showToastNotification, setShowToastNotification] = useState(false);
 
   const handleSubscribe = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -153,9 +160,23 @@ export function HealthBlog({ onBack }: { onBack: () => void }) {
         console.warn('Server newsletter route notice:', serverErr);
       }
 
+      const notifTitle = "Newsletter Subscription Confirmed";
+      const notifMsg = "You've successfully subscribed and you are going to be receiving newsletters henceforth.";
+
       setSubscribeStatus('success');
-      setSubscribeMessage('Thank you for subscribing! Your email has been registered for clinical updates.');
+      setSubscribeMessage(notifMsg);
+      setShowToastNotification(true);
       setSubscriberEmail('');
+
+      // Push notification to front-end notification center
+      if (onNotificationAdd) {
+        onNotificationAdd(notifTitle, notifMsg, 'success');
+      }
+
+      // Auto-hide floating notification after 7 seconds
+      setTimeout(() => {
+        setShowToastNotification(false);
+      }, 7000);
     } catch (err: any) {
       console.error('Newsletter subscription error:', err);
       setSubscribeStatus('error');
@@ -175,8 +196,43 @@ export function HealthBlog({ onBack }: { onBack: () => void }) {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-manrope transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-manrope transition-colors relative">
       
+      {/* Floating Frontend Toast Notification */}
+      <AnimatePresence>
+        {showToastNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="fixed top-20 right-4 sm:right-8 z-50 max-w-sm sm:max-w-md bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-500 rounded-2xl p-4 shadow-[0_20px_50px_rgba(16,185,129,0.25)] flex items-start gap-3.5"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center shrink-0 text-emerald-600">
+              <Bell className="w-5 h-5 animate-bounce" />
+            </div>
+            <div className="flex-1 pr-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                  Subscription Confirmed!
+                </h4>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                {subscribeMessage}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowToastNotification(false)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition-colors cursor-pointer shrink-0"
+              title="Close notification"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Panel matching landing page style */}
       <div className="bg-white dark:bg-slate-900 pt-24 pb-16 px-4 sm:px-6 md:px-8 border-b border-sky-100 dark:border-slate-800 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-sky-400/15 to-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
