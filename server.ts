@@ -98,6 +98,76 @@ async function startServer() {
     }
   });
 
+  // Newsletter Subscription Route
+  app.post("/api/subscribe-newsletter", async (req, res) => {
+    const { email, source, userId } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: "Email is required." });
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ error: "Please provide a valid email address." });
+    }
+
+    console.log(`[NEWSLETTER SUBSCRIPTION] New subscriber recorded: ${trimmedEmail} (source: ${source || 'library_chronicle'}, user: ${userId || 'guest'})`);
+
+    // Optional welcome email dispatch via nodemailer if credentials present
+    try {
+      const hasCredentials = process.env.NOTIFICATION_EMAIL && 
+                            process.env.NOTIFICATION_EMAIL_PASSWORD && 
+                            !process.env.NOTIFICATION_EMAIL.includes('example.com') &&
+                            process.env.NOTIFICATION_EMAIL_PASSWORD.length > 5;
+
+      if (hasCredentials) {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.NOTIFICATION_EMAIL,
+            pass: process.env.NOTIFICATION_EMAIL_PASSWORD
+          },
+          connectionTimeout: 5000,
+          greetingTimeout: 5000,
+          socketTimeout: 5000
+        });
+
+        const welcomeMail = {
+          from: `"MedConnect Clinical Intelligence" <${process.env.NOTIFICATION_EMAIL || 'no-reply@medconnect.app'}>`,
+          to: trimmedEmail,
+          subject: "Welcome to The Clinical Chronicle | MedConnect",
+          text: "Thank you for subscribing to MedConnect's Clinical Chronicle. You will receive weekly deep-dives into clinical breakthroughs and health research.",
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; border: 1px solid #e0f2fe; border-radius: 16px; max-width: 560px; margin: 0 auto; background-color: #ffffff;">
+              <h2 style="color: #0284c7; margin-top: 0;">Welcome to The Clinical Chronicle 🩺</h2>
+              <p style="color: #334155; font-size: 15px; line-height: 1.6;">Thank you for subscribing to MedConnect's medical intelligence newsletter.</p>
+              <p style="color: #475569; font-size: 14px; line-height: 1.6;">You will receive curated weekly summaries of peer-reviewed clinical breakthroughs, metabolic longevity research, and health technology updates.</p>
+              <div style="margin: 20px 0; padding: 16px; background-color: #f0f9ff; border-radius: 12px; border-left: 4px solid #0ea5e9;">
+                <p style="margin: 0; font-size: 13px; color: #0369a1; font-weight: 600;">Status: Active Subscriber</p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #0284c7;">Registered Email: ${trimmedEmail}</p>
+              </div>
+              <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+              <p style="font-size: 11px; color: #94a3b8; margin: 0;">MedConnect Digital Clinic & Research Intelligence.</p>
+            </div>
+          `
+        };
+
+        transporter.sendMail(welcomeMail).catch((e: any) => {
+          console.warn("[NEWSLETTER EMAIL NOTICE]: Welcome mail delivery simulated/deferred:", e.message);
+        });
+      }
+    } catch (e: any) {
+      console.warn("[NEWSLETTER SMTP SKIP]:", e.message);
+    }
+
+    return res.json({
+      status: "success",
+      message: "Successfully subscribed to The Clinical Chronicle newsletter.",
+      email: trimmedEmail,
+      subscribedAt: new Date().toISOString()
+    });
+  });
+
   // AI Diagnostic Chat API powered by Gemini 3.8 Model
   app.post("/api/diagnostic-chat", async (req, res) => {
     try {

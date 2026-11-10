@@ -98,6 +98,19 @@
         "time": { "type": "string", "description": "Reminder time in HH:MM format" }
       },
       "required": ["userId", "name", "dosage", "time"]
+    },
+    "NewsletterSubscriber": {
+      "title": "NewsletterSubscriber",
+      "description": "Email subscriber to clinical newsletters and medical breakthroughs.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email", "description": "Subscriber email address" },
+        "subscribedAt": { "type": "string", "format": "date-time", "description": "Subscription timestamp" },
+        "status": { "type": "string", "enum": ["active", "unsubscribed"], "description": "Subscription status" },
+        "source": { "type": "string", "description": "Where the user subscribed from" },
+        "userId": { "type": "string", "description": "Optional authenticated user ID" }
+      },
+      "required": ["email", "subscribedAt", "status"]
     }
   },
   "firestore": {
@@ -128,6 +141,10 @@
     "messages/{messageId}": {
       "schema": { "$ref": "#/entities/Message" },
       "description": "Consultation messages"
+    },
+    "newsletter_subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/entities/NewsletterSubscriber" },
+      "description": "Subscribers for the health newsletter"
     }
   }
 }

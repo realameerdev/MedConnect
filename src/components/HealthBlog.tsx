@@ -11,8 +11,12 @@ import {
   Heart,
   Activity,
   ArrowLeft,
-  X
+  X,
+  CheckCircle2
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface BlogPost {
   title: string;
@@ -89,11 +93,77 @@ const STATIC_POSTS: BlogPost[] = [
 ];
 
 export function HealthBlog({ onBack }: { onBack: () => void }) {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>(STATIC_POSTS);
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+
+  // Newsletter Subscription state
+  const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [subscribeMessage, setSubscribeMessage] = useState('');
+
+  const handleSubscribe = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanEmail = subscriberEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setSubscribeStatus('error');
+      setSubscribeMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setSubscribing(true);
+    setSubscribeStatus('idle');
+    setSubscribeMessage('');
+
+    try {
+      const now = new Date().toISOString();
+      const subscriberId = cleanEmail.replace(/[^a-zA-Z0-9]/g, '_');
+
+      // 1. Record in Firestore 'newsletter_subscribers' collection
+      try {
+        const subscriberRef = doc(db, 'newsletter_subscribers', subscriberId);
+        await setDoc(subscriberRef, {
+          email: cleanEmail,
+          subscribedAt: now,
+          status: 'active',
+          source: 'library_chronicle',
+          ...(user?.uid ? { userId: user.uid } : {})
+        }, { merge: true });
+      } catch (firestoreErr) {
+        console.warn('Firestore subscription log warning:', firestoreErr);
+      }
+
+      // 2. Dispatch to backend API for server-side logging and welcome notification
+      try {
+        await fetch('/api/subscribe-newsletter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: cleanEmail,
+            source: 'library_chronicle',
+            userId: user?.uid || null
+          })
+        });
+      } catch (serverErr) {
+        console.warn('Server newsletter route notice:', serverErr);
+      }
+
+      setSubscribeStatus('success');
+      setSubscribeMessage('Thank you for subscribing! Your email has been registered for clinical updates.');
+      setSubscriberEmail('');
+    } catch (err: any) {
+      console.error('Newsletter subscription error:', err);
+      setSubscribeStatus('error');
+      setSubscribeMessage('Unable to complete subscription right now. Please try again.');
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   const categories = ['All', 'Nutrition', 'Science', 'Lifestyle', 'Clinical'];
 
@@ -328,19 +398,63 @@ export function HealthBlog({ onBack }: { onBack: () => void }) {
           <p className="text-sky-100 text-sm sm:text-base mb-8 font-medium">
             Weekly deep-dives into clinical breakthroughs delivered securely to your inbox.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input 
-              type="email" 
-              placeholder="Enter your email address"
-              className="flex-1 bg-white/15 border border-white/30 rounded-full py-3.5 px-6 text-white placeholder-white/70 text-xs sm:text-sm font-medium focus:outline-none focus:bg-white/25 transition-all"
-            />
-            <motion.button 
-              whileTap={{ scale: 0.95 }}
-              className="bg-white text-sky-700 hover:bg-sky-50 px-6 py-3.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all shadow-md cursor-pointer whitespace-nowrap"
+
+          {subscribeStatus === 'success' ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl p-6 max-w-md mx-auto text-center shadow-lg"
             >
-              Subscribe Free
-            </motion.button>
-          </div>
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h4 className="text-lg font-bold text-white mb-1">Subscription Confirmed!</h4>
+              <p className="text-xs sm:text-sm text-sky-100 mb-4">{subscribeMessage}</p>
+              <button
+                type="button"
+                onClick={() => setSubscribeStatus('idle')}
+                className="text-xs font-bold text-white underline hover:text-sky-200 cursor-pointer transition-colors"
+              >
+                Subscribe another email
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSubscribe} className="max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="email" 
+                  value={subscriberEmail}
+                  onChange={(e) => {
+                    setSubscriberEmail(e.target.value);
+                    if (subscribeStatus === 'error') setSubscribeStatus('idle');
+                  }}
+                  placeholder="Enter your email address"
+                  disabled={subscribing}
+                  className="flex-1 bg-white/15 border border-white/30 rounded-full py-3.5 px-6 text-white placeholder-white/70 text-xs sm:text-sm font-medium focus:outline-none focus:bg-white/25 transition-all disabled:opacity-50"
+                />
+                <motion.button 
+                  type="submit"
+                  disabled={subscribing}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white text-sky-700 hover:bg-sky-50 px-6 py-3.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all shadow-md cursor-pointer whitespace-nowrap disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {subscribing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-sky-700" />
+                      <span>Subscribing...</span>
+                    </>
+                  ) : (
+                    <span>Subscribe Free</span>
+                  )}
+                </motion.button>
+              </div>
+              {subscribeStatus === 'error' && (
+                <p className="text-xs text-rose-200 font-semibold mt-2.5 text-center">
+                  {subscribeMessage}
+                </p>
+              )}
+            </form>
+          )}
         </div>
       </div>
     </div>

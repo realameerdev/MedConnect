@@ -124,6 +124,15 @@ service cloud.firestore {
       );
     }
 
+    function isValidNewsletterSubscriber(data) {
+      return hasOnlyAllowedFields(['email', 'subscribedAt', 'status', 'source', 'userId']) &&
+             data.email is string && isValidEmail(data.email) && data.email.size() < 200 &&
+             data.subscribedAt is string &&
+             data.status in ['active', 'unsubscribed'] &&
+             (!('source' in data) || (data.source is string && data.source.size() < 100)) &&
+             (!('userId' in data) || (data.userId is string && data.userId.size() < 100));
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
@@ -173,6 +182,14 @@ service cloud.firestore {
       allow list: if isAuthenticated();
       allow create: if isAuthenticated() && isValidMessage(request.resource.data) && request.resource.data.senderId == request.auth.uid;
       allow update: if false; // Messages are immutable
+    }
+
+    match /newsletter_subscribers/{subscriberId} {
+      allow get: if isAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
+      allow list: if isAdmin();
+      allow create: if isValidNewsletterSubscriber(request.resource.data);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
   }
 }
